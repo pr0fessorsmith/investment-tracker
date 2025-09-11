@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, TrendingDown, DollarSign, Activity, Eye, Trash2, Plus, Minus, Edit } from 'lucide-react'
 import { financeService } from '../services/financeService'
 import { Transaction, Position, Portfolio as PortfolioType, TransactionCalculator } from '../types/transactions'
@@ -22,9 +22,9 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
   // Calculate portfolio from transactions
   useEffect(() => {
     calculatePortfolio()
-  }, [transactions])
+  }, [transactions, calculatePortfolio])
 
-  const calculatePortfolio = async () => {
+  const calculatePortfolio = useCallback(async () => {
     if (transactions.length === 0) {
       setPortfolio(null)
       return
@@ -68,9 +68,18 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [transactions])
+
+  // Calculate portfolio from transactions
+  useEffect(() => {
+    calculatePortfolio()
+  }, [calculatePortfolio])
 
   const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount)
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
@@ -125,7 +134,7 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
           <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
             <p>• Check if you have the app open in another tab</p>
             <p>• Look in browser history for previous data</p>
-            <p>• Use "Add Sample Data" to get started again</p>
+            <p>• Use &quot;Add Sample Data&quot; to get started again</p>
             <p>• Your Google authentication and API settings are preserved</p>
           </div>
         </div>

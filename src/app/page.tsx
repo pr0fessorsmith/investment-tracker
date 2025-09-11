@@ -2,6 +2,7 @@
 
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { PlusCircle, TrendingUp, DollarSign, BarChart3, LogOut, History, Edit } from 'lucide-react'
 import TransactionForm from '@/components/TransactionForm'
 import TransactionPortfolio from '@/components/TransactionPortfolio'
@@ -196,10 +197,12 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <img
+                <Image
                   className="h-8 w-8 rounded-full"
-                  src={session.user?.image || ''}
+                  src={session.user?.image || '/default-avatar.png'}
                   alt={session.user?.name || 'User'}
+                  width={32}
+                  height={32}
                 />
                 <span className="text-sm font-medium text-gray-700">
                   {session.user?.name}
@@ -330,7 +333,7 @@ export default function Home() {
                             </p>
                             {transaction.notes && (
                               <p className="text-sm text-gray-600 dark:text-gray-300 italic mt-1">
-                                "{transaction.notes}"
+                                &quot;{transaction.notes}&quot;
                               </p>
                             )}
                           </div>

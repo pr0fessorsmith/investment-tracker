@@ -85,7 +85,7 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
       }, 500)
       return () => clearTimeout(timer)
     }
-  }, [formData.symbol, formData.type])
+  }, [formData.symbol, formData.type, formData.pricePerShare])
 
   // Validate sell transaction
   useEffect(() => {
