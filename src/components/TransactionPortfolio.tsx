@@ -19,11 +19,6 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
   const [isLoading, setIsLoading] = useState(false)
   const [expandedPosition, setExpandedPosition] = useState<string | null>(null)
 
-  // Calculate portfolio from transactions
-  useEffect(() => {
-    calculatePortfolio()
-  }, [transactions, calculatePortfolio])
-
   const calculatePortfolio = useCallback(async () => {
     if (transactions.length === 0) {
       setPortfolio(null)
@@ -76,10 +71,6 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
   }, [calculatePortfolio])
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount)
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
