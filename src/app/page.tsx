@@ -82,7 +82,7 @@ export default function Home() {
 
   const handleTestConnection = async () => {
     const result = await financeService.testConnection()
-    alert(`${result.success ? '✅' : '❌'} ${result.message}`)
+    alert(`${result ? '✅ API Connected!' : '❌ API Connection Failed'}`)
   }
 
   // Test localStorage functionality

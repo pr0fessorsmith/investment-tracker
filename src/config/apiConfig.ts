@@ -1,14 +1,14 @@
 // API Configuration
-// This ensures environment variables are properly loaded
+// Server-side API configuration for secure API key handling
 
 export const API_CONFIG = {
-  ALPHA_VANTAGE_API_KEY: 'TNRN5PTG8FS0OG03', // Your Alpha Vantage API key
-  BASE_URL: 'https://www.alphavantage.co/query'
+  // Use server-side API route instead of direct Alpha Vantage calls
+  STOCK_API_BASE_URL: '/api/stock'
 }
 
-// Debug function to check environment loading
+// Debug function to check API connectivity
 export const debugEnvironment = () => {
   console.log('Environment Debug:')
-  console.log('- API Key configured:', API_CONFIG.ALPHA_VANTAGE_API_KEY ? '✅ Ready' : '❌ Missing')
-  console.log('- Using key:', API_CONFIG.ALPHA_VANTAGE_API_KEY.substring(0, 8) + '...')
+  console.log('- Using server-side API routes for secure Alpha Vantage access')
+  console.log('- Stock API endpoint:', API_CONFIG.STOCK_API_BASE_URL)
 }

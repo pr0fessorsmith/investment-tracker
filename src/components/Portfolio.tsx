@@ -101,11 +101,9 @@ export default function Portfolio() {
     console.log('Starting API test...')
     const result = await financeService.testConnection()
     
-    let message = `API Test Result:\n${result.message}\n\nAPI Key: ${result.apiKey}`
-    
-    if (result.details) {
-      message += `\n\nTechnical Details:\n${JSON.stringify(result.details, null, 2)}`
-    }
+    const message = result 
+      ? '✅ API Connection Successful!\n\nThe Alpha Vantage API is working correctly.' 
+      : '❌ API Connection Failed!\n\nPlease check your API configuration.'
     
     console.log('API Test Result:', result)
     alert(message)
