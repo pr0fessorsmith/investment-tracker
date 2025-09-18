@@ -97,18 +97,6 @@ export default function Portfolio() {
     setUpdating(false)
   }
 
-  const testAPIConnection = async () => {
-    console.log('Starting API test...')
-    const result = await financeService.testConnection()
-    
-    const message = result 
-      ? '✅ API Connection Successful!\n\nThe Alpha Vantage API is working correctly.' 
-      : '❌ API Connection Failed!\n\nPlease check your API configuration.'
-    
-    console.log('API Test Result:', result)
-    alert(message)
-  }
-
   // Delete investment function
   const deleteInvestment = (id: string) => {
     if (window.confirm('Are you sure you want to delete this investment?')) {
@@ -275,13 +263,6 @@ export default function Portfolio() {
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${updating ? 'animate-spin' : ''}`} />
                 {updating ? 'Updating...' : 'Refresh Prices'}
-              </button>
-              <button
-                onClick={testAPIConnection}
-                className="inline-flex items-center px-3 py-2 border border-blue-300 shadow-sm text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Test API
               </button>
             </div>
           </div>

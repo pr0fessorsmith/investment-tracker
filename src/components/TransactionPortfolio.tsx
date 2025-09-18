@@ -9,12 +9,11 @@ interface TransactionPortfolioProps {
   transactions: Transaction[]
   onDeleteTransaction: (transactionId: string) => void
   onEditTransaction: (transaction: Transaction) => void
-  onTestConnection: () => void
   onDataRecovery?: () => void
   onTestLocalStorage?: () => void
 }
 
-export default function TransactionPortfolio({ transactions, onDeleteTransaction, onEditTransaction, onTestConnection, onDataRecovery, onTestLocalStorage }: TransactionPortfolioProps) {
+export default function TransactionPortfolio({ transactions, onDeleteTransaction, onEditTransaction, onDataRecovery, onTestLocalStorage }: TransactionPortfolioProps) {
   const [portfolio, setPortfolio] = useState<PortfolioType | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [expandedPosition, setExpandedPosition] = useState<string | null>(null)
@@ -97,12 +96,6 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
           Your transaction data appears to be missing. This may have happened during recent updates.
         </p>
         <div className="space-y-3">
-          <button
-            onClick={onTestConnection}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mr-3"
-          >
-            Test API Connection
-          </button>
           {onTestLocalStorage && (
             <button
               onClick={onTestLocalStorage}
@@ -158,16 +151,10 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
       {/* Portfolio Summary */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-md p-6 text-white">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
+          <h2 className="text-xl font-bold flex items-center gap-2">
             <TrendingUp className="h-6 w-6" />
             Portfolio Summary
           </h2>
-          <button
-            onClick={onTestConnection}
-            className="px-3 py-1 bg-white/20 rounded-lg hover:bg-white/30 transition-colors text-sm"
-          >
-            Test API
-          </button>
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

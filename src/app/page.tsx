@@ -80,11 +80,6 @@ export default function Home() {
     setEditingTransaction(null)
   }
 
-  const handleTestConnection = async () => {
-    const result = await financeService.testConnection()
-    alert(`${result ? '✅ API Connected!' : '❌ API Connection Failed'}`)
-  }
-
   // Test localStorage functionality
   const handleTestLocalStorage = () => {
     try {
@@ -187,95 +182,71 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Mobile-Optimized Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <TrendingUp className="h-8 w-8 text-primary-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Investment Tracker</h1>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Investment Tracker</h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="flex items-center space-x-2">
                 <Image
-                  className="h-8 w-8 rounded-full"
+                  className="h-6 w-6 sm:h-8 sm:w-8 rounded-full"
                   src={session.user?.image || '/default-avatar.png'}
                   alt={session.user?.name || 'User'}
                   width={32}
                   height={32}
                 />
-                <span className="text-sm font-medium text-gray-700">
+                <span className="hidden sm:block text-sm font-medium text-gray-700">
                   {session.user?.name}
                 </span>
               </div>
               <button
                 onClick={() => signOut()}
-                className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700"
+                className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 px-2 py-1 rounded-md hover:bg-gray-100"
               >
                 <LogOut className="h-4 w-4" />
-                <span>Sign out</span>
+                <span className="hidden sm:inline">Sign out</span>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Navigation */}
-      <nav className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            <button
-              onClick={() => setActiveTab('portfolio')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'portfolio'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-4 w-4" />
-                <span>Portfolio</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('transactions')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'transactions'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <PlusCircle className="h-4 w-4" />
-                <span>{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'history'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <History className="h-4 w-4" />
-                <span>Transaction History</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('charts')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'charts'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <BarChart3 className="h-4 w-4" />
-                <span>Analytics</span>
-              </div>
-            </button>
+      {/* Mobile-Optimized Navigation */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex overflow-x-auto scrollbar-hide">
+            {[
+              { id: 'portfolio', label: 'Portfolio', icon: DollarSign, emoji: '💼' },
+              { id: 'transactions', label: editingTransaction ? 'Edit' : 'Add', icon: PlusCircle, emoji: '➕' },
+              { id: 'history', label: 'History', icon: History, emoji: '📋' },
+              { id: 'charts', label: 'Analytics', icon: BarChart3, emoji: '📊' }
+            ].map((tab) => {
+              const Icon = tab.icon
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 min-w-0 px-3 py-4 text-center border-b-2 transition-all duration-200 whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600 bg-blue-50'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  {/* Mobile: Icon + Label */}
+                  <div className="flex flex-col items-center space-y-1">
+                    <div className="flex items-center justify-center">
+                      <span className="text-lg sm:hidden">{tab.emoji}</span>
+                      <Icon className="h-4 w-4 hidden sm:block" />
+                    </div>
+                    <span className="text-xs sm:text-sm font-medium">{tab.label}</span>
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </div>
       </nav>
@@ -288,7 +259,6 @@ export default function Home() {
               transactions={transactions}
               onDeleteTransaction={handleDeleteTransaction}
               onEditTransaction={handleEditTransaction}
-              onTestConnection={handleTestConnection}
               onDataRecovery={handleDataRecovery}
               onTestLocalStorage={handleTestLocalStorage}
             />
