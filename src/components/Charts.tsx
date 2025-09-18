@@ -208,11 +208,11 @@ export default function Charts({ transactions: propTransactions }: ChartsProps) 
   const transactionVolumeData = getTransactionVolumeData()
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Portfolio Allocation */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Portfolio Allocation</h3>
-        <div className="h-80">
+      <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow">
+        <h3 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white mb-4">Portfolio Allocation</h3>
+        <div className="h-64 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -221,7 +221,7 @@ export default function Charts({ transactions: propTransactions }: ChartsProps) 
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
+                outerRadius="60%"
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -230,21 +230,28 @@ export default function Charts({ transactions: propTransactions }: ChartsProps) 
                 ))}
               </Pie>
               <Tooltip formatter={(value: number) => [`$${value.toFixed(2)}`, 'Value']} />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: '14px' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Performance Chart */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Performance Overview</h3>
-        <div className="h-80">
+      <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow">
+        <h3 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white mb-4">Performance Overview</h3>
+        <div className="h-64 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={performanceData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="symbol" />
-              <YAxis />
+              <XAxis 
+                dataKey="symbol" 
+                tick={{ fontSize: 12 }}
+                interval={0}
+                angle={-45}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis tick={{ fontSize: 12 }} />
               <Tooltip 
                 formatter={(value: number, name: string) => [
                   `$${value.toFixed(2)}`,
@@ -252,7 +259,7 @@ export default function Charts({ transactions: propTransactions }: ChartsProps) 
                   name === 'unrealizedGainLoss' ? 'Unrealized P&L' : 'Total P&L'
                 ]}
               />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: '14px' }} />
               <Bar dataKey="realizedGainLoss" stackId="a" fill="#22c55e" name="Realized P&L" />
               <Bar dataKey="unrealizedGainLoss" stackId="a" fill="#3b82f6" name="Unrealized P&L" />
             </BarChart>
@@ -262,14 +269,18 @@ export default function Charts({ transactions: propTransactions }: ChartsProps) 
 
       {/* Transaction Volume Over Time */}
       {transactionVolumeData.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Transaction Volume by Month</h3>
-          <div className="h-80">
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow">
+          <h3 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white mb-4">Transaction Volume by Month</h3>
+          <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={transactionVolumeData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <XAxis 
+                  dataKey="month" 
+                  tick={{ fontSize: 10 }}
+                  interval={Math.max(0, Math.floor(transactionVolumeData.length / 6))}
+                />
+                <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip 
                   formatter={(value: number, name: string) => [
                     `$${value.toFixed(2)}`,
@@ -277,7 +288,7 @@ export default function Charts({ transactions: propTransactions }: ChartsProps) 
                     name === 'sellVolume' ? 'Sales' : 'Net Flow'
                   ]}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: '14px' }} />
                 <Area type="monotone" dataKey="buyVolume" stackId="1" stroke="#22c55e" fill="#22c55e" name="Purchases" />
                 <Area type="monotone" dataKey="sellVolume" stackId="2" stroke="#ef4444" fill="#ef4444" name="Sales" />
               </AreaChart>
@@ -288,15 +299,15 @@ export default function Charts({ transactions: propTransactions }: ChartsProps) 
 
       {/* Individual Position Trend Selector */}
       {positions.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
+            <h3 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white">
               Stock Price Trend (Last 90 Days)
             </h3>
             <select
               value={selectedSymbol}
               onChange={(e) => setSelectedSymbol(e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 sm:px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
             >
               {positions.map((position) => (
                 <option key={position.symbol} value={position.symbol}>
@@ -320,51 +331,55 @@ export default function Charts({ transactions: propTransactions }: ChartsProps) 
             
             return (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4">
                   <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Current Price</p>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Current Price</p>
+                    <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                       ${currentPrice.toFixed(2)}
                     </p>
                   </div>
                   <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Avg Cost</p>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Avg Cost</p>
+                    <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                       ${avgCost.toFixed(2)}
                     </p>
                   </div>
                   <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Price Change</p>
-                    <p className={`text-lg font-semibold ${priceChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Price Change</p>
+                    <p className={`text-base sm:text-lg font-semibold ${priceChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       ${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)}
                     </p>
                   </div>
                   <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">% Change</p>
-                    <p className={`text-lg font-semibold ${priceChangePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">% Change</p>
+                    <p className={`text-base sm:text-lg font-semibold ${priceChangePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {priceChangePercent >= 0 ? '+' : ''}{priceChangePercent.toFixed(2)}%
                     </p>
                   </div>
                 </div>
                 
-                <div className="h-80">
+                <div className="h-64 sm:h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={trendData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="date" 
-                        tick={{ fontSize: 12 }}
-                        interval={Math.ceil(trendData.length / 10)} // Show fewer labels for clarity
+                        tick={{ fontSize: 10 }}
+                        interval={Math.ceil(trendData.length / 6)}
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
                       />
                       <YAxis 
                         domain={['dataMin - 2', 'dataMax + 2']}
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 10 }}
+                        width={50}
                       />
                       <Tooltip 
                         formatter={(value: number) => [`$${value.toFixed(2)}`, 'Price']}
                         labelFormatter={(label) => `Date: ${label}`}
                       />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: '12px' }} />
                       {/* Average cost reference line */}
                       <Line 
                         type="monotone" 
@@ -380,7 +395,7 @@ export default function Charts({ transactions: propTransactions }: ChartsProps) 
                         type="monotone" 
                         dataKey="value" 
                         stroke={priceChangePercent >= 0 ? '#22c55e' : '#ef4444'}
-                        strokeWidth={3}
+                        strokeWidth={2}
                         dot={false}
                         name={`${selectedSymbol} Price`}
                       />

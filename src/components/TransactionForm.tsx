@@ -160,11 +160,11 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
     (parseFloat(formData.quantity) * parseFloat(formData.pricePerShare)) + (parseFloat(formData.fees) || 0) : 0
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div className="flex items-center gap-2">
-          <PlusCircle className="h-6 w-6 text-blue-600" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <PlusCircle className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
             {isEditMode ? 'Edit Transaction' : 'Add Transaction'}
           </h2>
         </div>
@@ -172,20 +172,20 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
           <button
             type="button"
             onClick={onCancelEdit}
-            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+            className="px-3 py-2 sm:px-4 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors touch-target"
           >
             Cancel Edit
           </button>
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Transaction Type Toggle */}
-        <div className="flex gap-2 mb-4">
+        <div className="grid grid-cols-2 gap-2 mb-4 sm:mb-6">
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, type: 'BUY' }))}
-            className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-colors ${
+            className={`py-3 sm:py-4 px-4 rounded-lg font-semibold transition-colors touch-target ${
               formData.type === 'BUY'
                 ? 'bg-green-600 text-white'
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -197,7 +197,7 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, type: 'SELL' }))}
-            className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-colors ${
+            className={`py-3 sm:py-4 px-4 rounded-lg font-semibold transition-colors touch-target ${
               formData.type === 'SELL'
                 ? 'bg-red-600 text-white'
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -218,7 +218,7 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
             placeholder="e.g., AAPL, MSFT, TSLA"
             value={formData.symbol}
             onChange={(e) => setFormData(prev => ({ ...prev, symbol: e.target.value.toUpperCase() }))}
-            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full p-3 sm:p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base"
             required
           />
           {currentPrice && (
@@ -233,7 +233,7 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Quantity */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -242,10 +242,10 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
             </label>
             <input
               type="number"
-              placeholder="100 or 0.25643 (fractional shares)"
+              placeholder="100 or 0.25643"
               value={formData.quantity}
               onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full p-3 sm:p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base"
               min="0"
               step="0.00001"
               required
@@ -268,13 +268,15 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
               placeholder="150.00"
               value={formData.pricePerShare}
               onChange={(e) => setFormData(prev => ({ ...prev, pricePerShare: e.target.value }))}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full p-3 sm:p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base"
               min="0"
               step="0.01"
               required
             />
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -285,7 +287,7 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
               type="date"
               value={formData.date}
               onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full p-3 sm:p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base"
               required
             />
           </div>
@@ -301,7 +303,7 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
               placeholder="9.95"
               value={formData.fees}
               onChange={(e) => setFormData(prev => ({ ...prev, fees: e.target.value }))}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full p-3 sm:p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base"
               min="0"
               step="0.01"
             />
@@ -318,7 +320,7 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
             placeholder="e.g., Earnings beat expectations, Strong quarterly results..."
             value={formData.notes}
             onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full p-3 sm:p-4 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base resize-y"
             rows={3}
           />
         </div>
@@ -330,17 +332,17 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
               ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
               : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
           }`}>
-            <h3 className={`font-semibold ${
+            <h3 className={`font-semibold text-base sm:text-lg ${
               formData.type === 'BUY' ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'
             }`}>
               Transaction Summary
             </h3>
-            <p className={`text-sm ${
+            <p className={`text-sm sm:text-base ${
               formData.type === 'BUY' ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
             }`}>
               {formData.type} {formData.quantity} shares of {formData.symbol} at ${formData.pricePerShare}/share
             </p>
-            <p className={`font-bold ${
+            <p className={`font-bold text-lg sm:text-xl ${
               formData.type === 'BUY' ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'
             }`}>
               Total: ${totalAmount.toFixed(2)} {formData.fees && `(includes $${formData.fees} fees)`}
@@ -351,7 +353,7 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
         <button
           type="submit"
           disabled={isLoading || !validation.valid}
-          className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
+          className={`w-full py-4 px-4 rounded-lg font-semibold text-white text-base sm:text-lg transition-colors touch-target ${
             formData.type === 'BUY'
               ? 'bg-green-600 hover:bg-green-700 disabled:bg-gray-400'
               : 'bg-red-600 hover:bg-red-700 disabled:bg-gray-400'
