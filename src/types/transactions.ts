@@ -1,6 +1,14 @@
 // Transaction-based investment tracking types
 // Supports multiple purchases, sales, and position management
 
+export interface Tag {
+  id: string
+  name: string
+  color: string
+  category?: string // e.g., 'broker', 'strategy', 'sector'
+  createdAt: string
+}
+
 export interface Transaction {
   id: string
   symbol: string
@@ -11,6 +19,7 @@ export interface Transaction {
   totalAmount: number // quantity * pricePerShare + fees
   fees?: number
   notes?: string
+  tags?: string[] // Array of tag IDs
 }
 
 export interface Position {
@@ -23,6 +32,7 @@ export interface Position {
   currentValue?: number // Current market value
   transactions: Transaction[] // All buy/sell transactions
   lastUpdated: string
+  tags?: string[] // Unique tags from all transactions
 }
 
 export interface Portfolio {
@@ -90,6 +100,14 @@ export class TransactionCalculator {
     // Calculate average cost per share
     const averageCostPerShare = totalShares > 0 ? totalInvested / totalShares : 0
     
+    // Collect unique tags from all transactions
+    const allTags = new Set<string>()
+    for (const transaction of transactions) {
+      if (transaction.tags) {
+        transaction.tags.forEach(tag => allTags.add(tag))
+      }
+    }
+    
     return {
       symbol,
       totalShares,
@@ -97,7 +115,8 @@ export class TransactionCalculator {
       totalInvested,
       realizedGainLoss,
       transactions: transactions,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      tags: Array.from(allTags)
     }
   }
   

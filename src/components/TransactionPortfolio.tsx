@@ -1,9 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { TrendingUp, TrendingDown, DollarSign, Activity, Eye, Trash2, Plus, Minus, Edit, ChevronUp } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, Activity, Eye, Trash2, Plus, Minus, Edit, ChevronUp, Filter, X, Tag as TagIcon } from 'lucide-react'
 import { financeService } from '../services/financeService'
-import { Transaction, Position, Portfolio as PortfolioType, TransactionCalculator } from '../types/transactions'
+import { TagService } from '../services/tagService'
+import { Transaction, Position, Portfolio as PortfolioType, TransactionCalculator, Tag } from '../types/transactions'
 
 interface TransactionPortfolioProps {
   transactions: Transaction[]
@@ -17,6 +18,62 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
   const [portfolio, setPortfolio] = useState<PortfolioType | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [expandedPosition, setExpandedPosition] = useState<string | null>(null)
+  
+  // Tag filtering state
+  const [availableTags, setAvailableTags] = useState<Tag[]>([])
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [showTagFilter, setShowTagFilter] = useState(false)
+  const [filteredPositions, setFilteredPositions] = useState<Position[]>([])
+
+  // Load available tags
+  useEffect(() => {
+    const tags = TagService.getTags()
+    setAvailableTags(tags)
+  }, [])
+
+  // Filter positions based on selected tags
+  useEffect(() => {
+    if (!portfolio) {
+      setFilteredPositions([])
+      return
+    }
+
+    if (selectedTags.length === 0) {
+      setFilteredPositions(portfolio.positions)
+      return
+    }
+
+    const filtered = portfolio.positions.filter(position => {
+      if (!position.tags || position.tags.length === 0) return false
+      return selectedTags.some(selectedTag => position.tags!.includes(selectedTag))
+    })
+
+    setFilteredPositions(filtered)
+  }, [portfolio, selectedTags])
+
+  // Tag filter functions
+  const toggleTag = (tagId: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tagId) 
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    )
+  }
+
+  const clearTagFilters = () => {
+    setSelectedTags([])
+  }
+
+  const getUsedTags = () => {
+    if (!portfolio) return []
+    const usedTagIds = new Set<string>()
+    portfolio.positions.forEach(position => {
+      if (position.tags) {
+        position.tags.forEach(tagId => usedTagIds.add(tagId))
+      }
+    })
+    return availableTags.filter(tag => usedTagIds.has(tag.id))
+  }
 
   const calculatePortfolio = useCallback(async () => {
     if (transactions.length === 0) {
@@ -199,8 +256,91 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
 
       {/* Positions */}
       <div className="space-y-4">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Current Positions</h3>
-        {portfolio.positions.map((position) => (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Current Positions</h3>
+          
+          {/* Tag Filter Controls */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowTagFilter(!showTagFilter)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+                selectedTags.length > 0 || showTagFilter
+                  ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
+                  : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+              }`}
+            >
+              <Filter className="h-4 w-4" />
+              <span className="text-sm">Filter by Tags</span>
+              {selectedTags.length > 0 && (
+                <span className="bg-blue-600 text-white text-xs rounded-full px-2 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
+                  {selectedTags.length}
+                </span>
+              )}
+            </button>
+            
+            {selectedTags.length > 0 && (
+              <button
+                onClick={clearTagFilters}
+                className="flex items-center gap-1 px-2 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+              >
+                <X className="h-4 w-4" />
+                <span className="text-sm">Clear</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Tag Filter Panel */}
+        {showTagFilter && (
+          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <TagIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Filter by tags used in your portfolio:
+              </span>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              {getUsedTags().map(tag => (
+                <button
+                  key={tag.id}
+                  onClick={() => toggleTag(tag.id)}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    selectedTags.includes(tag.id)
+                      ? 'text-white shadow-md transform scale-105'
+                      : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 hover:shadow-sm'
+                  }`}
+                  style={selectedTags.includes(tag.id) ? { backgroundColor: tag.color } : {}}
+                >
+                  <span
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: tag.color }}
+                  />
+                  {tag.name}
+                  {tag.category && (
+                    <span className="text-xs opacity-75">({tag.category})</span>
+                  )}
+                </button>
+              ))}
+              
+              {getUsedTags().length === 0 && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                  No tags found in your current positions. Add tags to transactions to use this filter.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Filtered Results Info */}
+        {selectedTags.length > 0 && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              Showing {filteredPositions.length} of {portfolio.positions.length} positions matching selected tags
+            </p>
+          </div>
+        )}
+        {filteredPositions.map((position) => (
           <div key={position.symbol} className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="p-4 sm:p-6">
               <div className="flex justify-between items-start mb-4">
@@ -231,6 +371,29 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
                   )}
                 </button>
               </div>
+
+              {/* Position Tags */}
+              {position.tags && position.tags.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex flex-wrap gap-2">
+                    {position.tags.map(tagId => {
+                      const tag = TagService.getTagById(tagId)
+                      return tag ? (
+                        <span
+                          key={tagId}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white"
+                          style={{ backgroundColor: tag.color }}
+                        >
+                          {tag.name}
+                          {tag.category && (
+                            <span className="opacity-75">({tag.category})</span>
+                          )}
+                        </span>
+                      ) : null
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
@@ -288,6 +451,22 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
                               </p>
                               {transaction.notes && (
                                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 italic mt-1 truncate">{transaction.notes}</p>
+                              )}
+                              {transaction.tags && transaction.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {transaction.tags.map(tagId => {
+                                    const tag = TagService.getTagById(tagId)
+                                    return tag ? (
+                                      <span
+                                        key={tagId}
+                                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium text-white"
+                                        style={{ backgroundColor: tag.color }}
+                                      >
+                                        {tag.name}
+                                      </span>
+                                    ) : null
+                                  })}
+                                </div>
                               )}
                             </div>
                           </div>

@@ -3,10 +3,11 @@
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { PlusCircle, TrendingUp, DollarSign, BarChart3, LogOut, History, Edit } from 'lucide-react'
+import { PlusCircle, TrendingUp, DollarSign, BarChart3, LogOut, History, Edit, Tag as TagIcon } from 'lucide-react'
 import TransactionForm from '@/components/TransactionForm'
 import TransactionPortfolio from '@/components/TransactionPortfolio'
 import Charts from '@/components/Charts'
+import TagManager from '@/components/TagManager'
 import { Transaction } from '@/types/transactions'
 import { financeService } from '@/services/financeService'
 
@@ -15,6 +16,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('portfolio')
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [showTagManager, setShowTagManager] = useState(false)
 
   // Load transactions from localStorage
   useEffect(() => {
@@ -223,13 +225,20 @@ export default function Home() {
               { id: 'portfolio', label: 'Portfolio', icon: DollarSign, emoji: '💼' },
               { id: 'transactions', label: editingTransaction ? 'Edit' : 'Add', icon: PlusCircle, emoji: '➕' },
               { id: 'history', label: 'History', icon: History, emoji: '📋' },
-              { id: 'charts', label: 'Analytics', icon: BarChart3, emoji: '📊' }
+              { id: 'charts', label: 'Analytics', icon: BarChart3, emoji: '📊' },
+              { id: 'tags', label: 'Tags', icon: TagIcon, emoji: '🏷️', action: () => setShowTagManager(true) }
             ].map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    if (tab.action) {
+                      tab.action()
+                    } else {
+                      setActiveTab(tab.id)
+                    }
+                  }}
                   className={`flex-1 min-w-0 px-3 py-4 text-center border-b-2 transition-all duration-200 whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600 bg-blue-50'
@@ -333,6 +342,16 @@ export default function Home() {
           {activeTab === 'charts' && <Charts transactions={transactions} />}
         </div>
       </main>
+
+      {/* Tag Manager Modal */}
+      <TagManager 
+        isOpen={showTagManager}
+        onClose={() => setShowTagManager(false)}
+        onTagsUpdated={() => {
+          // Refresh any components that use tags
+          // This could trigger a re-render of components that display tags
+        }}
+      />
     </div>
   )
 }
