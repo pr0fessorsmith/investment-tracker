@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Vercel Environment</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        .card {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        h1 { color: #60a5fa; margin-bottom: 10px; }
+        h2 { color: #818cf8; margin-top: 30px; }
+        button {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+        }
+        button:hover { background: #2563EB; }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            background: #334155;
+            border-left: 4px solid #3B82F6;
+        }
+        .success { border-left-color: #10b981; background: #064e3b; }
+        .error { border-left-color: #ef4444; background: #7f1d1d; }
+        .warning { border-left-color: #f59e0b; background: #78350f; }
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-top: 10px;
+            border: 1px solid #334155;
+        }
+        code { color: #60a5fa; }
+        .check { color: #10b981; }
+        .cross { color: #ef4444; }
+        ul { margin: 10px 0; padding-left: 20px; }
+        li { margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔍 Vercel Environment Debugger</h1>
+        <p>Run this on your <strong>Vercel deployment URL</strong> to check environment variables.</p>
+        
+        <div>
+            <button onclick="checkEnvironment()">🔬 Check Environment</button>
+            <button onclick="checkSupabase()">☁️ Test Supabase Connection</button>
+            <button onclick="checkAuth()">🔐 Check Authentication</button>
+            <button onclick="checkMigration()">📦 Check Migration Status</button>
+        </div>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+        }
+
+        async function checkEnvironment() {
+            const checks = [];
+            
+            // Check if we're on Vercel
+            const isVercel = window.location.hostname.includes('vercel.app');
+            checks.push(`<li>Running on: <code>${window.location.hostname}</code> ${isVercel ? '<span class="check">✅ Vercel</span>' : '<span class="warning">⚠️ Not Vercel</span>'}</li>`);
+            
+            // Check environment variables (client-side)
+            const hasSupabaseUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SUPABASE_URL;
+            const hasSupabaseKey = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            
+            checks.push(`<li>NEXT_PUBLIC_SUPABASE_URL: ${hasSupabaseUrl ? '<span class="check">✅ Set</span>' : '<span class="cross">❌ Missing</span>'}</li>`);
+            checks.push(`<li>NEXT_PUBLIC_SUPABASE_ANON_KEY: ${hasSupabaseKey ? '<span class="check">✅ Set</span>' : '<span class="cross">❌ Missing</span>'}</li>`);
+            
+            if (hasSupabaseUrl) {
+                checks.push(`<li>Supabase URL: <code>${process.env.NEXT_PUBLIC_SUPABASE_URL}</code></li>`);
+            }
+            
+            if (hasSupabaseKey) {
+                const keyLength = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length;
+                const dots = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.match(/\./g) || []).length;
+                checks.push(`<li>Key length: ${keyLength} (expected ~249)</li>`);
+                checks.push(`<li>JWT dots: ${dots} ${dots === 2 ? '<span class="check">✅ Valid</span>' : '<span class="cross">❌ Invalid</span>'}</li>`);
+            }
+            
+            // Check localStorage
+            const hasLocalTransactions = !!localStorage.getItem('transactions');
+            const hasLocalTags = !!localStorage.getItem('investment-tags');
+            const migrationCompleted = localStorage.getItem('supabase_migration_completed');
+            
+            checks.push(`<li>Local transactions: ${hasLocalTransactions ? '<span class="check">✅ Found</span>' : '<span class="cross">❌ None</span>'}</li>`);
+            checks.push(`<li>Local tags: ${hasLocalTags ? '<span class="check">✅ Found</span>' : '<span class="cross">❌ None</span>'}</li>`);
+            checks.push(`<li>Migration completed flag: ${migrationCompleted === 'true' ? '<span class="warning">⚠️ Yes (preventing retry)</span>' : '<span class="check">✅ No (can migrate)</span>'}</li>`);
+            
+            const status = hasSupabaseUrl && hasSupabaseKey ? 'success' : 'error';
+            showStatus(`
+                <h2>Environment Check Results:</h2>
+                <ul>${checks.join('')}</ul>
+                ${!hasSupabaseUrl || !hasSupabaseKey ? `
+                    <div style="margin-top: 20px; padding: 15px; background: #7f1d1d; border-radius: 6px;">
+                        <strong>🚨 Environment Variables Missing!</strong>
+                        <p>Go to Vercel Dashboard → Settings → Environment Variables and add:</p>
+                        <ul>
+                            <li>NEXT_PUBLIC_SUPABASE_URL</li>
+                            <li>NEXT_PUBLIC_SUPABASE_ANON_KEY</li>
+                        </ul>
+                        <p>Then redeploy!</p>
+                    </div>
+                ` : ''}
+                ${migrationCompleted === 'true' && (hasLocalTransactions || hasLocalTags) ? `
+                    <div style="margin-top: 20px; padding: 15px; background: #78350f; border-radius: 6px;">
+                        <strong>⚠️ Migration Flag Set But Data Still Local!</strong>
+                        <p>Reset the flag to retry migration:</p>
+                        <button onclick="resetMigrationFlag()">Reset Migration Flag</button>
+                    </div>
+                ` : ''}
+            `, status);
+        }
+
+        async function checkSupabase() {
+            try {
+                const url = process.env?.NEXT_PUBLIC_SUPABASE_URL;
+                const key = process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+                
+                if (!url || !key) {
+                    showStatus(`
+                        <h2>❌ Supabase Not Configured</h2>
+                        <p>Environment variables are missing. Cannot test connection.</p>
+                    `, 'error');
+                    return;
+                }
+                
+                showStatus(`<h2>🔄 Testing Supabase Connection...</h2>`, 'info');
+                
+                // Try to fetch from Supabase REST API
+                const response = await fetch(`${url}/rest/v1/`, {
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`
+                    }
+                });
+                
+                const result = `
+                    <h2>Supabase Connection Test:</h2>
+                    <ul>
+                        <li>URL: <code>${url}</code></li>
+                        <li>Status: ${response.ok ? '<span class="check">✅ Connected</span>' : '<span class="cross">❌ Failed</span>'}</li>
+                        <li>Response code: ${response.status}</li>
+                    </ul>
+                    ${!response.ok ? `
+                        <div style="margin-top: 20px; padding: 15px; background: #7f1d1d; border-radius: 6px;">
+                            <strong>Connection Failed!</strong>
+                            <p>Status ${response.status}: ${response.statusText}</p>
+                            ${response.status === 401 ? '<p>❌ <strong>401 Unauthorized:</strong> Your anon key is invalid or expired!</p>' : ''}
+                            ${response.status === 403 ? '<p>❌ <strong>403 Forbidden:</strong> Check your RLS policies!</p>' : ''}
+                        </div>
+                    ` : ''}
+                `;
+                
+                showStatus(result, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showStatus(`
+                    <h2>❌ Connection Error</h2>
+                    <pre>${error.message}</pre>
+                `, 'error');
+            }
+        }
+
+        async function checkAuth() {
+            const cookies = document.cookie;
+            const hasSessionToken = cookies.includes('next-auth.session-token') || cookies.includes('__Secure-next-auth.session-token');
+            
+            showStatus(`
+                <h2>Authentication Status:</h2>
+                <ul>
+                    <li>Session token: ${hasSessionToken ? '<span class="check">✅ Found</span>' : '<span class="cross">❌ Not signed in</span>'}</li>
+                    <li>Cookies: <pre>${cookies || 'None'}</pre></li>
+                </ul>
+                ${!hasSessionToken ? `
+                    <div style="margin-top: 20px; padding: 15px; background: #78350f; border-radius: 6px;">
+                        <strong>⚠️ Not Authenticated</strong>
+                        <p>You need to sign in with Google to use cloud storage and migration.</p>
+                    </div>
+                ` : ''}
+            `, hasSessionToken ? 'success' : 'warning');
+        }
+
+        async function checkMigration() {
+            const transactions = localStorage.getItem('transactions');
+            const tags = localStorage.getItem('investment-tags');
+            const migrationFlag = localStorage.getItem('supabase_migration_completed');
+            
+            let txCount = 0, tagCount = 0;
+            try {
+                if (transactions) txCount = JSON.parse(transactions).length;
+                if (tags) tagCount = JSON.parse(tags).length;
+            } catch (e) {}
+            
+            const hasData = txCount > 0 || tagCount > 0;
+            const canMigrate = hasData && migrationFlag !== 'true';
+            
+            showStatus(`
+                <h2>Migration Status:</h2>
+                <ul>
+                    <li>Local transactions: ${txCount}</li>
+                    <li>Local tags: ${tagCount}</li>
+                    <li>Migration completed: ${migrationFlag === 'true' ? '<span class="warning">⚠️ Yes</span>' : '<span class="check">✅ No</span>'}</li>
+                    <li>Can migrate: ${canMigrate ? '<span class="check">✅ Yes</span>' : '<span class="cross">❌ No</span>'}</li>
+                </ul>
+                ${migrationFlag === 'true' && hasData ? `
+                    <div style="margin-top: 20px; padding: 15px; background: #78350f; border-radius: 6px;">
+                        <strong>⚠️ Migration Flag Set</strong>
+                        <p>The migration flag is set but you still have local data. Reset it to try again:</p>
+                        <button onclick="resetMigrationFlag()">Reset Migration Flag</button>
+                    </div>
+                ` : ''}
+                ${!hasData ? `
+                    <div style="margin-top: 20px; padding: 15px; background: #1e40af; border-radius: 6px;">
+                        <strong>ℹ️ No Local Data</strong>
+                        <p>No data to migrate. Add some transactions first!</p>
+                    </div>
+                ` : ''}
+            `, canMigrate ? 'success' : 'warning');
+        }
+
+        function resetMigrationFlag() {
+            localStorage.removeItem('supabase_migration_completed');
+            showStatus(`
+                <h2>✅ Migration Flag Reset!</h2>
+                <p>You can now retry the migration. Refresh the page.</p>
+            `, 'success');
+            setTimeout(() => window.location.reload(), 2000);
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            setTimeout(checkEnvironment, 500);
+        });
+    </script>
+</body>
+</html>
