@@ -17,7 +17,7 @@ export class SupabaseTransactionService {
   /**
    * Check if Supabase is available
    */
-  private static isAvailable(): boolean {
+  static isAvailable(): boolean {
     return this.supabase !== null
   }
 

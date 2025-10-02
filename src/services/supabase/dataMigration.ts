@@ -91,8 +91,19 @@ export class DataMigration {
     }
 
     try {
+      // Check if Supabase services are available
+      if (!SupabaseTagService.isAvailable() || !SupabaseTransactionService.isAvailable()) {
+        console.error('❌ Supabase services not available - check authentication')
+        return {
+          success: false,
+          message: 'Cloud storage not available. Please ensure you are signed in.',
+          stats,
+        }
+      }
+
       // Check if already migrated
       if (this.isMigrationCompleted()) {
+        console.log('⚠️ Migration already completed')
         return {
           success: true,
           message: 'Migration already completed',
@@ -102,6 +113,7 @@ export class DataMigration {
 
       // Check if there's data to migrate
       if (!this.hasLocalStorageData()) {
+        console.log('⚠️ No localStorage data found')
         this.markMigrationCompleted()
         return {
           success: true,
@@ -114,25 +126,33 @@ export class DataMigration {
       console.log('🔄 Starting tag migration...')
       const localTags = this.getLocalStorageTags()
       stats.tagsTotal = localTags.length
+      console.log(`📊 Found ${stats.tagsTotal} tags in localStorage:`, localTags)
 
       const tagIdMap = new Map<string, string>() // old ID -> new ID
 
       for (const tag of localTags) {
+        console.log(`🏷️ Processing tag: ${tag.name} (${tag.id})`)
+        
         // Skip predefined tags as they're created automatically
         if (tag.id.startsWith('predefined-')) {
+          console.log(`  ↳ Predefined tag, looking for equivalent in Supabase...`)
           // Try to find the equivalent tag in Supabase
           const supabaseTags = await SupabaseTagService.getTags()
           const existing = supabaseTags.find(
             (t) => t.name.toLowerCase() === tag.name.toLowerCase()
           )
           if (existing) {
+            console.log(`  ✅ Found equivalent: ${existing.id}`)
             tagIdMap.set(tag.id, existing.id)
             stats.tagsMigrated++
+          } else {
+            console.log(`  ⚠️ No equivalent found`)
           }
           continue
         }
 
         // Create custom tags
+        console.log(`  ↳ Creating custom tag...`)
         const newTag = await SupabaseTagService.createTag(
           tag.name,
           tag.color,
@@ -140,8 +160,11 @@ export class DataMigration {
         )
 
         if (newTag) {
+          console.log(`  ✅ Created: ${newTag.id}`)
           tagIdMap.set(tag.id, newTag.id)
           stats.tagsMigrated++
+        } else {
+          console.error(`  ❌ Failed to create tag`)
         }
       }
 
@@ -151,12 +174,17 @@ export class DataMigration {
       console.log('🔄 Starting transaction migration...')
       const localTransactions = this.getLocalStorageTransactions()
       stats.transactionsTotal = localTransactions.length
+      console.log(`📊 Found ${stats.transactionsTotal} transactions in localStorage:`, localTransactions)
 
       for (const tx of localTransactions) {
+        console.log(`💼 Processing transaction: ${tx.symbol} (${tx.type}) - ${tx.quantity} shares`)
+        
         // Map old tag IDs to new tag IDs
         const newTagIds = tx.tags
           ?.map((oldId) => tagIdMap.get(oldId))
           .filter((id): id is string => id !== undefined)
+
+        console.log(`  ↳ Mapped tags: ${tx.tags?.length || 0} → ${newTagIds?.length || 0}`)
 
         const newTx = await SupabaseTransactionService.createTransaction({
           ...tx,
@@ -164,7 +192,10 @@ export class DataMigration {
         })
 
         if (newTx) {
+          console.log(`  ✅ Created transaction: ${newTx.id}`)
           stats.transactionsMigrated++
+        } else {
+          console.error(`  ❌ Failed to create transaction`)
         }
       }
 

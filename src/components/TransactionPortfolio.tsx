@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, DollarSign, Activity, Eye, Trash2, Plus, Minu
 import { financeService } from '../services/financeService'
 import { UnifiedTagService } from '../services/unifiedTagService'
 import { Transaction, Position, Portfolio as PortfolioType, TransactionCalculator, Tag } from '../types/transactions'
+import DataMigrationButton from './DataMigrationButton'
 
 interface TransactionPortfolioProps {
   transactions: Transaction[]
@@ -262,8 +263,10 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Current Positions</h3>
           
-          {/* Tag Filter Controls */}
-          <div className="flex items-center gap-2">
+          {/* Tag Filter Controls and Migration Button */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <DataMigrationButton />
+            
             <button
               onClick={() => setShowTagFilter(!showTagFilter)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
