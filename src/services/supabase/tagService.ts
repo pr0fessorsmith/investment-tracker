@@ -14,6 +14,13 @@ export class SupabaseTagService {
   private static supabase = createClient()
 
   /**
+   * Check if Supabase is available
+   */
+  private static isAvailable(): boolean {
+    return this.supabase !== null
+  }
+
+  /**
    * Convert database row to Tag interface
    */
   private static toTag(row: TagRow): Tag {
@@ -30,6 +37,8 @@ export class SupabaseTagService {
    * Get current user ID
    */
   private static async getUserId(): Promise<string | null> {
+    if (!this.isAvailable() || !this.supabase) return null
+    
     const { data: { user } } = await this.supabase.auth.getUser()
     return user?.id || null
   }
@@ -39,6 +48,8 @@ export class SupabaseTagService {
    */
   static async getTags(): Promise<Tag[]> {
     try {
+      if (!this.isAvailable() || !this.supabase) return []
+      
       const { data, error } = await this.supabase
         .from('tags')
         .select('*')
@@ -65,6 +76,8 @@ export class SupabaseTagService {
     category?: 'broker' | 'strategy' | 'sector' | 'custom'
   ): Promise<Tag | null> {
     try {
+      if (!this.isAvailable() || !this.supabase) return null
+      
       const userId = await this.getUserId()
       if (!userId) {
         console.error('User not authenticated')
@@ -104,6 +117,8 @@ export class SupabaseTagService {
     updates: Partial<Omit<Tag, 'id' | 'createdAt'>>
   ): Promise<Tag | null> {
     try {
+      if (!this.isAvailable() || !this.supabase) return null
+      
       const tagUpdate: TagUpdate = {}
       if (updates.name !== undefined) tagUpdate.name = updates.name
       if (updates.color !== undefined) tagUpdate.color = updates.color
@@ -135,6 +150,8 @@ export class SupabaseTagService {
    */
   static async deleteTag(id: string): Promise<boolean> {
     try {
+      if (!this.isAvailable() || !this.supabase) return false
+      
       const { error } = await this.supabase
         .from('tags')
         .delete()
@@ -157,6 +174,8 @@ export class SupabaseTagService {
    */
   static async getTagById(id: string): Promise<Tag | null> {
     try {
+      if (!this.isAvailable() || !this.supabase) return null
+      
       const { data, error } = await this.supabase
         .from('tags')
         .select('*')
@@ -180,6 +199,7 @@ export class SupabaseTagService {
    */
   static async getTagsByIds(ids: string[]): Promise<Tag[]> {
     if (ids.length === 0) return []
+    if (!this.isAvailable() || !this.supabase) return []
 
     try {
       const { data, error } = await this.supabase
@@ -204,6 +224,8 @@ export class SupabaseTagService {
    */
   static async searchTags(query: string): Promise<Tag[]> {
     try {
+      if (!this.isAvailable() || !this.supabase) return []
+      
       const { data, error } = await this.supabase
         .from('tags')
         .select('*')
@@ -227,6 +249,8 @@ export class SupabaseTagService {
    */
   static async getTagsByCategory(category: string): Promise<Tag[]> {
     try {
+      if (!this.isAvailable() || !this.supabase) return []
+      
       const { data, error } = await this.supabase
         .from('tags')
         .select('*')
@@ -266,6 +290,8 @@ export class SupabaseTagService {
    */
   static async tagExists(name: string, excludeId?: string): Promise<boolean> {
     try {
+      if (!this.isAvailable() || !this.supabase) return false
+      
       let query = this.supabase
         .from('tags')
         .select('id')
@@ -297,6 +323,8 @@ export class SupabaseTagService {
     category?: 'broker' | 'strategy' | 'sector' | 'custom'
   ): Promise<Tag | null> {
     try {
+      if (!this.isAvailable() || !this.supabase) return null
+      
       // Try to find existing tag
       const { data: existing } = await this.supabase
         .from('tags')
@@ -339,6 +367,8 @@ export class SupabaseTagService {
    * Subscribe to real-time tag changes
    */
   static subscribeToTags(callback: (tags: Tag[]) => void) {
+    if (!this.isAvailable() || !this.supabase) return () => {}
+    
     const channel = this.supabase
       .channel('tags_changes')
       .on(

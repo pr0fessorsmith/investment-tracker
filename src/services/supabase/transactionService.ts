@@ -15,6 +15,13 @@ export class SupabaseTransactionService {
   private static supabase = createClient()
 
   /**
+   * Check if Supabase is available
+   */
+  private static isAvailable(): boolean {
+    return this.supabase !== null
+  }
+
+  /**
    * Convert database row to Transaction interface
    */
   private static toTransaction(row: TransactionRow, tagIds: string[] = []): Transaction {
@@ -37,6 +44,8 @@ export class SupabaseTransactionService {
    * Get current user ID
    */
   private static async getUserId(): Promise<string | null> {
+    if (!this.isAvailable() || !this.supabase) return null
+    
     const { data: { user } } = await this.supabase.auth.getUser()
     return user?.id || null
   }
@@ -46,6 +55,8 @@ export class SupabaseTransactionService {
    */
   static async getTransactions(): Promise<Transaction[]> {
     try {
+      if (!this.isAvailable() || !this.supabase) return []
+      
       const { data: transactions, error: txError } = await this.supabase
         .from('transactions')
         .select('*')
@@ -86,6 +97,8 @@ export class SupabaseTransactionService {
    */
   static async getTransactionsBySymbol(symbol: string): Promise<Transaction[]> {
     try {
+      if (!this.isAvailable() || !this.supabase) return []
+      
       const { data: transactions, error: txError } = await this.supabase
         .from('transactions')
         .select('*')
@@ -128,6 +141,8 @@ export class SupabaseTransactionService {
     transaction: Omit<Transaction, 'id'>
   ): Promise<Transaction | null> {
     try {
+      if (!this.isAvailable() || !this.supabase) return null
+      
       const userId = await this.getUserId()
       if (!userId) {
         console.error('User not authenticated')
@@ -175,6 +190,8 @@ export class SupabaseTransactionService {
     updates: Partial<Omit<Transaction, 'id'>>
   ): Promise<Transaction | null> {
     try {
+      if (!this.isAvailable() || !this.supabase) return null
+      
       const txUpdate: TransactionUpdate = {}
       if (updates.symbol !== undefined) txUpdate.symbol = updates.symbol.toUpperCase()
       if (updates.type !== undefined) txUpdate.type = updates.type === 'BUY' ? 'buy' : 'sell'
@@ -212,6 +229,8 @@ export class SupabaseTransactionService {
    */
   static async deleteTransaction(id: string): Promise<boolean> {
     try {
+      if (!this.isAvailable() || !this.supabase) return false
+      
       // Tags will be automatically deleted via CASCADE
       const { error } = await this.supabase
         .from('transactions')
@@ -238,6 +257,8 @@ export class SupabaseTransactionService {
     tagIds: string[]
   ): Promise<void> {
     try {
+      if (!this.isAvailable() || !this.supabase) return
+      
       // Delete existing tags
       await this.supabase
         .from('transaction_tags')
@@ -299,6 +320,8 @@ export class SupabaseTransactionService {
    * Subscribe to real-time transaction changes
    */
   static subscribeToTransactions(callback: (transactions: Transaction[]) => void) {
+    if (!this.isAvailable() || !this.supabase) return () => {}
+    
     const channel = this.supabase
       .channel('transactions_changes')
       .on(

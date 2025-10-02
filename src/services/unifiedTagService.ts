@@ -16,6 +16,8 @@ export class UnifiedTagService {
   private static async isAuthenticated(): Promise<boolean> {
     try {
       const supabase = createClient()
+      if (!supabase) return false
+      
       const { data: { user } } = await supabase.auth.getUser()
       return !!user
     } catch {
