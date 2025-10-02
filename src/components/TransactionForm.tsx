@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import { PlusCircle, DollarSign, Calendar, Hash, MessageSquare, TrendingUp, TrendingDown, Tag as TagIcon, X } from 'lucide-react'
 import { financeService } from '../services/financeService'
-import { TagService } from '../services/tagService'
+import { UnifiedTagService } from '../services/unifiedTagService'
+import { TransactionService } from '../services/transactionService'
 import { Transaction, TransactionCalculator, Tag } from '../types/transactions'
 
 interface TransactionFormProps {
@@ -40,8 +41,11 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
 
   // Load available tags
   useEffect(() => {
-    const tags = TagService.getTags()
-    setAvailableTags(tags)
+    const loadTags = async () => {
+      const tags = await UnifiedTagService.getTags()
+      setAvailableTags(tags)
+    }
+    loadTags()
   }, [])
 
   // Filter tags based on input
@@ -153,8 +157,7 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
     // Round quantity to 5 decimal places to handle floating-point precision
     const roundedQuantity = Math.round(quantity * 100000) / 100000
 
-    const transaction: Transaction = {
-      id: isEditMode && editingTransaction ? editingTransaction.id : Date.now().toString(),
+    const transactionData = {
       symbol: formData.symbol.toUpperCase(),
       type: formData.type,
       quantity: roundedQuantity,
@@ -166,10 +169,18 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
       tags: formData.tags.length > 0 ? formData.tags : undefined
     }
 
-    if (isEditMode && onTransactionUpdated) {
-      onTransactionUpdated(transaction)
+    if (isEditMode && editingTransaction && onTransactionUpdated) {
+      // Update existing transaction
+      const updated = await TransactionService.updateTransaction(editingTransaction.id, transactionData)
+      if (updated) {
+        onTransactionUpdated(updated)
+      }
     } else {
-      onTransactionAdded(transaction)
+      // Create new transaction
+      const created = await TransactionService.createTransaction(transactionData)
+      if (created) {
+        onTransactionAdded(created)
+      }
     }
 
     // Reset form only if not in edit mode
@@ -204,11 +215,14 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
     setFormData(prev => ({ ...prev, tags: prev.tags.filter(id => id !== tagId) }))
   }
 
-  const createAndAddTag = () => {
-    if (tagInput.trim() && !TagService.tagExists(tagInput.trim())) {
-      const newTag = TagService.createTag(tagInput.trim())
-      setAvailableTags(TagService.getTags()) // Refresh available tags
-      addTag(newTag.id)
+  const createAndAddTag = async () => {
+    if (tagInput.trim() && !(await UnifiedTagService.tagExists(tagInput.trim()))) {
+      const newTag = await UnifiedTagService.createTag(tagInput.trim())
+      const tags = await UnifiedTagService.getTags()
+      setAvailableTags(tags) // Refresh available tags
+      if (newTag) {
+        addTag(newTag.id)
+      }
     }
   }
 
@@ -403,7 +417,7 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
           {formData.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {formData.tags.map(tagId => {
-                const tag = TagService.getTagById(tagId)
+                const tag = availableTags.find(t => t.id === tagId)
                 return tag ? (
                   <span
                     key={tagId}
@@ -459,7 +473,7 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
                     )}
                   </button>
                 ))}
-                {tagInput.trim() && !TagService.tagExists(tagInput.trim()) && (
+                {tagInput.trim() && (
                   <button
                     type="button"
                     onClick={createAndAddTag}

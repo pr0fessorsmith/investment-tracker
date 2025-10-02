@@ -8,8 +8,9 @@ import TransactionForm from '@/components/TransactionForm'
 import TransactionPortfolio from '@/components/TransactionPortfolio'
 import Charts from '@/components/Charts'
 import TagManager from '@/components/TagManager'
+import MigrationModal from '@/components/MigrationModal'
 import { Transaction } from '@/types/transactions'
-import { financeService } from '@/services/financeService'
+import { TransactionService } from '@/services/transactionService'
 
 export default function Home() {
   const { data: session, status } = useSession()
@@ -17,60 +18,63 @@ export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   const [showTagManager, setShowTagManager] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [showMigration, setShowMigration] = useState(false)
 
-  // Load transactions from localStorage
+  // Load transactions (from Supabase or localStorage)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('investment-transactions')
-      console.log('Loading transactions from localStorage:', saved)
-      
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        console.log('Parsed transactions:', parsed)
-        setTransactions(parsed)
-      } else {
-        console.log('No saved transactions found')
+    const loadTransactions = async () => {
+      setIsLoading(true)
+      try {
+        const loaded = await TransactionService.getTransactions()
+        setTransactions(loaded)
+      } catch (error) {
+        console.error('Error loading transactions:', error)
+      } finally {
+        setIsLoading(false)
       }
-    } catch (error) {
-      console.error('Error loading transactions:', error)
     }
+
+    loadTransactions()
   }, [])
 
-  // Save transactions to localStorage
+  // Show migration modal after user logs in
   useEffect(() => {
-    if (transactions.length > 0) {
-      console.log('Saving transactions to localStorage:', transactions)
-      localStorage.setItem('investment-transactions', JSON.stringify(transactions))
-      console.log('Saved successfully')
+    if (session && !isLoading) {
+      setShowMigration(true)
     }
-  }, [transactions])
+  }, [session, isLoading])
 
-  const handleTransactionAdded = (transaction: Transaction) => {
+  const handleTransactionAdded = async (transaction: Transaction) => {
     console.log('Adding transaction:', transaction)
-    const newTransactions = [...transactions, transaction]
-    setTransactions(newTransactions)
     
-    // Force save immediately
-    try {
-      localStorage.setItem('investment-transactions', JSON.stringify(newTransactions))
-      console.log('Force saved transactions:', newTransactions)
-    } catch (error) {
-      console.error('Error force saving:', error)
-    }
-    
+    // Add to local state immediately for responsiveness
+    setTransactions(prev => [...prev, transaction])
     setActiveTab('portfolio') // Switch to portfolio after adding
   }
 
-  const handleTransactionUpdated = (updatedTransaction: Transaction) => {
+  const handleTransactionUpdated = async (updatedTransaction: Transaction) => {
+    // Update local state immediately
     setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t))
     setEditingTransaction(null)
     setActiveTab('portfolio') // Switch to portfolio after editing
   }
 
-  const handleDeleteTransaction = (transactionId: string) => {
+  const handleDeleteTransaction = async (transactionId: string) => {
     if (confirm('Are you sure you want to delete this transaction?')) {
+      // Delete from service
+      await TransactionService.deleteTransaction(transactionId)
+      
+      // Update local state
       setTransactions(prev => prev.filter(t => t.id !== transactionId))
     }
+  }
+
+  const handleMigrationComplete = async () => {
+    setShowMigration(false)
+    // Reload transactions after migration
+    const loaded = await TransactionService.getTransactions()
+    setTransactions(loaded)
   }
 
   const handleEditTransaction = (transaction: Transaction) => {
@@ -342,6 +346,9 @@ export default function Home() {
           {activeTab === 'charts' && <Charts transactions={transactions} />}
         </div>
       </main>
+
+      {/* Migration Modal */}
+      <MigrationModal onComplete={handleMigrationComplete} />
 
       {/* Tag Manager Modal */}
       <TagManager 

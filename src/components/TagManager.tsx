@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Tag as TagIcon, Plus, Edit, Trash2, X, Save, Users, Target, Building } from 'lucide-react'
-import { TagService } from '../services/tagService'
+import { UnifiedTagService } from '../services/unifiedTagService'
 import { Tag } from '../types/transactions'
 
 interface TagManagerProps {
@@ -13,6 +13,7 @@ interface TagManagerProps {
 
 export default function TagManager({ isOpen, onClose, onTagsUpdated }: TagManagerProps) {
   const [tags, setTags] = useState<Tag[]>([])
+  const [categories, setCategories] = useState<string[]>([])
   const [editingTag, setEditingTag] = useState<Tag | null>(null)
   const [newTagForm, setNewTagForm] = useState({
     name: '',
@@ -36,30 +37,30 @@ export default function TagManager({ isOpen, onClose, onTagsUpdated }: TagManage
     }
   }, [isOpen])
 
-  const loadTags = () => {
-    const allTags = TagService.getTags()
+  const loadTags = async () => {
+    const allTags = await UnifiedTagService.getTags()
     setTags(allTags)
+    const cats = await UnifiedTagService.getCategories()
+    setCategories(cats)
   }
-
-  const categories = TagService.getCategories()
   const filteredTags = tags.filter(tag => {
     const matchesSearch = tag.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = selectedCategory === 'all' || tag.category === selectedCategory
     return matchesSearch && matchesCategory
   })
 
-  const handleCreateTag = () => {
+  const handleCreateTag = async () => {
     if (!newTagForm.name.trim()) return
 
-    if (TagService.tagExists(newTagForm.name.trim())) {
+    if (await UnifiedTagService.tagExists(newTagForm.name.trim())) {
       alert('A tag with this name already exists')
       return
     }
 
-    TagService.createTag(
+    await UnifiedTagService.createTag(
       newTagForm.name.trim(),
       newTagForm.color,
-      newTagForm.category || undefined
+      (newTagForm.category || undefined) as 'broker' | 'strategy' | 'sector' | 'custom' | undefined
     )
 
     loadTags()
@@ -68,15 +69,15 @@ export default function TagManager({ isOpen, onClose, onTagsUpdated }: TagManage
     onTagsUpdated?.()
   }
 
-  const handleUpdateTag = () => {
+  const handleUpdateTag = async () => {
     if (!editingTag || !editingTag.name.trim()) return
 
-    if (TagService.tagExists(editingTag.name.trim(), editingTag.id)) {
+    if (await UnifiedTagService.tagExists(editingTag.name.trim(), editingTag.id)) {
       alert('A tag with this name already exists')
       return
     }
 
-    TagService.updateTag(editingTag.id, {
+    await UnifiedTagService.updateTag(editingTag.id, {
       name: editingTag.name.trim(),
       color: editingTag.color,
       category: editingTag.category || undefined
@@ -87,9 +88,9 @@ export default function TagManager({ isOpen, onClose, onTagsUpdated }: TagManage
     onTagsUpdated?.()
   }
 
-  const handleDeleteTag = (tag: Tag) => {
+  const handleDeleteTag = async (tag: Tag) => {
     if (confirm(`Are you sure you want to delete the tag "${tag.name}"? This will remove it from all transactions.`)) {
-      TagService.deleteTag(tag.id)
+      await UnifiedTagService.deleteTag(tag.id)
       loadTags()
       onTagsUpdated?.()
     }

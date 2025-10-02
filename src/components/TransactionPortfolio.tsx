@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, TrendingDown, DollarSign, Activity, Eye, Trash2, Plus, Minus, Edit, ChevronUp, Filter, X, Tag as TagIcon } from 'lucide-react'
 import { financeService } from '../services/financeService'
-import { TagService } from '../services/tagService'
+import { UnifiedTagService } from '../services/unifiedTagService'
 import { Transaction, Position, Portfolio as PortfolioType, TransactionCalculator, Tag } from '../types/transactions'
 
 interface TransactionPortfolioProps {
@@ -27,8 +27,11 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
 
   // Load available tags
   useEffect(() => {
-    const tags = TagService.getTags()
-    setAvailableTags(tags)
+    const loadTags = async () => {
+      const tags = await UnifiedTagService.getTags()
+      setAvailableTags(tags)
+    }
+    loadTags()
   }, [])
 
   // Filter positions based on selected tags
@@ -377,7 +380,7 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
                 <div className="mb-4">
                   <div className="flex flex-wrap gap-2">
                     {position.tags.map(tagId => {
-                      const tag = TagService.getTagById(tagId)
+                      const tag = availableTags.find(t => t.id === tagId)
                       return tag ? (
                         <span
                           key={tagId}
@@ -455,7 +458,7 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
                               {transaction.tags && transaction.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">
                                   {transaction.tags.map(tagId => {
-                                    const tag = TagService.getTagById(tagId)
+                                    const tag = availableTags.find(t => t.id === tagId)
                                     return tag ? (
                                       <span
                                         key={tagId}
