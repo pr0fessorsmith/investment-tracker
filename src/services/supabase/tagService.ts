@@ -34,13 +34,51 @@ export class SupabaseTagService {
   }
 
   /**
-   * Get current user ID
+   * Get current user ID from NextAuth session
+   * Note: We're using NextAuth for authentication, not Supabase Auth
    */
   private static async getUserId(): Promise<string | null> {
-    if (!this.isAvailable() || !this.supabase) return null
-    
-    const { data: { user } } = await this.supabase.auth.getUser()
-    return user?.id || null
+    // User ID should be passed from the calling component that has access to NextAuth session
+    // This method is a placeholder for backward compatibility
+    console.warn('getUserId() called without user context. User ID should be passed explicitly.')
+    return null
+  }
+
+  /**
+   * Create a new tag with explicit user ID
+   */
+  static async createTagWithUser(
+    userId: string,
+    name: string,
+    color: string = '#3B82F6',
+    category?: 'broker' | 'strategy' | 'sector' | 'custom'
+  ): Promise<Tag | null> {
+    try {
+      if (!this.isAvailable() || !this.supabase) return null
+      
+      const tagData: TagInsert = {
+        user_id: userId,
+        name: name.trim(),
+        color,
+        category: category || 'custom',
+      }
+
+      const { data, error } = await this.supabase
+        .from('tags')
+        .insert(tagData)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error creating tag:', error)
+        return null
+      }
+
+      return this.toTag(data)
+    } catch (error) {
+      console.error('Error in createTagWithUser:', error)
+      return null
+    }
   }
 
   /**
@@ -69,16 +107,22 @@ export class SupabaseTagService {
 
   /**
    * Create a new tag
+   * @param userEmail - User email from NextAuth (optional, will try to get from Supabase auth if not provided)
    */
   static async createTag(
     name: string,
     color: string = '#3B82F6',
-    category?: 'broker' | 'strategy' | 'sector' | 'custom'
+    category?: 'broker' | 'strategy' | 'sector' | 'custom',
+    userEmail?: string
   ): Promise<Tag | null> {
     try {
       if (!this.isAvailable() || !this.supabase) return null
       
-      const userId = await this.getUserId()
+      let userId: string | null = userEmail || null
+      if (!userId) {
+        userId = await this.getUserId()
+      }
+      
       if (!userId) {
         console.error('User not authenticated')
         return null

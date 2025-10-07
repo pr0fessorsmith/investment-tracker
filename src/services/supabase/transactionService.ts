@@ -136,14 +136,20 @@ export class SupabaseTransactionService {
 
   /**
    * Create a new transaction
+   * @param userEmail - User email from NextAuth (optional, will try to get from Supabase auth if not provided)
    */
   static async createTransaction(
-    transaction: Omit<Transaction, 'id'>
+    transaction: Omit<Transaction, 'id'>,
+    userEmail?: string
   ): Promise<Transaction | null> {
     try {
       if (!this.isAvailable() || !this.supabase) return null
       
-      const userId = await this.getUserId()
+      let userId: string | null = userEmail || null
+      if (!userId) {
+        userId = await this.getUserId()
+      }
+      
       if (!userId) {
         console.error('User not authenticated')
         return null

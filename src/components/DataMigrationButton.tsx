@@ -21,7 +21,15 @@ export default function DataMigrationButton() {
     setMigrationResult(null)
 
     try {
-      const result = await DataMigration.migrateToSupabase()
+      // Pass user email to migration
+      const userEmail = session?.user?.email
+      if (!userEmail) {
+        setError('User email not available. Please sign in again.')
+        setIsMigrating(false)
+        return
+      }
+
+      const result = await DataMigration.migrateToSupabase(userEmail)
       setMigrationResult(result)
       
       if (!result.success) {

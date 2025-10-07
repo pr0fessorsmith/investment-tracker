@@ -72,8 +72,9 @@ export class DataMigration {
 
   /**
    * Migrate all data from localStorage to Supabase
+   * @param userEmail - The email of the authenticated user from NextAuth
    */
-  static async migrateToSupabase(): Promise<{
+  static async migrateToSupabase(userEmail?: string): Promise<{
     success: boolean
     message: string
     stats: {
@@ -91,12 +92,22 @@ export class DataMigration {
     }
 
     try {
-      // Check if Supabase services are available
-      if (!SupabaseTagService.isAvailable() || !SupabaseTransactionService.isAvailable()) {
-        console.error('❌ Supabase services not available - check authentication')
+      // Check if user email is provided
+      if (!userEmail) {
+        console.error('❌ User email not provided')
         return {
           success: false,
-          message: 'Cloud storage not available. Please ensure you are signed in.',
+          message: 'User email is required for migration. Please ensure you are signed in.',
+          stats,
+        }
+      }
+
+      // Check if Supabase services are available
+      if (!SupabaseTagService.isAvailable() || !SupabaseTransactionService.isAvailable()) {
+        console.error('❌ Supabase services not available - check environment variables')
+        return {
+          success: false,
+          message: 'Cloud storage not available. Please check configuration.',
           stats,
         }
       }
@@ -151,7 +162,8 @@ export class DataMigration {
         const newTag = await SupabaseTagService.createTag(
           tag.name,
           tag.color,
-          tag.category as 'broker' | 'strategy' | 'sector' | 'custom' | undefined
+          tag.category as 'broker' | 'strategy' | 'sector' | 'custom' | undefined,
+          userEmail
         )
 
         if (newTag) {
@@ -184,7 +196,7 @@ export class DataMigration {
         const newTx = await SupabaseTransactionService.createTransaction({
           ...tx,
           tags: newTagIds || [],
-        })
+        }, userEmail)
 
         if (newTx) {
           console.log(`  ✅ Created transaction: ${newTx.id}`)

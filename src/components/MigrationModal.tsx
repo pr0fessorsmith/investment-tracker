@@ -5,9 +5,10 @@ import { DataMigration } from '@/services/supabase/dataMigration'
 
 interface MigrationModalProps {
   onComplete: () => void
+  userEmail?: string
 }
 
-export default function MigrationModal({ onComplete }: MigrationModalProps) {
+export default function MigrationModal({ onComplete, userEmail }: MigrationModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isMigrating, setIsMigrating] = useState(false)
   const [migrationComplete, setMigrationComplete] = useState(false)
@@ -33,7 +34,13 @@ export default function MigrationModal({ onComplete }: MigrationModalProps) {
     setError(null)
 
     try {
-      const result = await DataMigration.migrateToSupabase()
+      if (!userEmail) {
+        setError('User email not available. Please sign in.')
+        setIsMigrating(false)
+        return
+      }
+
+      const result = await DataMigration.migrateToSupabase(userEmail)
 
       if (result.success) {
         setMigrationStats(result.stats)

@@ -348,7 +348,10 @@ export default function Home() {
       </main>
 
       {/* Migration Modal */}
-      <MigrationModal onComplete={handleMigrationComplete} />
+      <MigrationModal 
+        onComplete={handleMigrationComplete} 
+        userEmail={session?.user?.email || undefined}
+      />
 
       {/* Tag Manager Modal */}
       <TagManager 
