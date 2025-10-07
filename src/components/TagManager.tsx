@@ -9,9 +9,10 @@ interface TagManagerProps {
   isOpen: boolean
   onClose: () => void
   onTagsUpdated?: () => void
+  userEmail?: string
 }
 
-export default function TagManager({ isOpen, onClose, onTagsUpdated }: TagManagerProps) {
+export default function TagManager({ isOpen, onClose, onTagsUpdated, userEmail }: TagManagerProps) {
   const [tags, setTags] = useState<Tag[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [editingTag, setEditingTag] = useState<Tag | null>(null)
@@ -35,12 +36,12 @@ export default function TagManager({ isOpen, onClose, onTagsUpdated }: TagManage
     if (isOpen) {
       loadTags()
     }
-  }, [isOpen])
+  }, [isOpen, userEmail])
 
   const loadTags = async () => {
-    const allTags = await UnifiedTagService.getTags()
+    const allTags = await UnifiedTagService.getTags(userEmail)
     setTags(allTags)
-    const cats = await UnifiedTagService.getCategories()
+    const cats = await UnifiedTagService.getCategories(userEmail)
     setCategories(cats)
   }
   const filteredTags = tags.filter(tag => {
@@ -52,7 +53,7 @@ export default function TagManager({ isOpen, onClose, onTagsUpdated }: TagManage
   const handleCreateTag = async () => {
     if (!newTagForm.name.trim()) return
 
-    if (await UnifiedTagService.tagExists(newTagForm.name.trim())) {
+    if (await UnifiedTagService.tagExists(newTagForm.name.trim(), undefined, userEmail)) {
       alert('A tag with this name already exists')
       return
     }
@@ -60,7 +61,8 @@ export default function TagManager({ isOpen, onClose, onTagsUpdated }: TagManage
     await UnifiedTagService.createTag(
       newTagForm.name.trim(),
       newTagForm.color,
-      (newTagForm.category || undefined) as 'broker' | 'strategy' | 'sector' | 'custom' | undefined
+      (newTagForm.category || undefined) as 'broker' | 'strategy' | 'sector' | 'custom' | undefined,
+      userEmail
     )
 
     loadTags()
@@ -72,7 +74,7 @@ export default function TagManager({ isOpen, onClose, onTagsUpdated }: TagManage
   const handleUpdateTag = async () => {
     if (!editingTag || !editingTag.name.trim()) return
 
-    if (await UnifiedTagService.tagExists(editingTag.name.trim(), editingTag.id)) {
+    if (await UnifiedTagService.tagExists(editingTag.name.trim(), editingTag.id, userEmail)) {
       alert('A tag with this name already exists')
       return
     }
@@ -81,7 +83,7 @@ export default function TagManager({ isOpen, onClose, onTagsUpdated }: TagManage
       name: editingTag.name.trim(),
       color: editingTag.color,
       category: editingTag.category || undefined
-    })
+    }, userEmail)
 
     loadTags()
     setEditingTag(null)
@@ -90,7 +92,7 @@ export default function TagManager({ isOpen, onClose, onTagsUpdated }: TagManage
 
   const handleDeleteTag = async (tag: Tag) => {
     if (confirm(`Are you sure you want to delete the tag "${tag.name}"? This will remove it from all transactions.`)) {
-      await UnifiedTagService.deleteTag(tag.id)
+      await UnifiedTagService.deleteTag(tag.id, userEmail)
       loadTags()
       onTagsUpdated?.()
     }

@@ -13,9 +13,10 @@ interface TransactionFormProps {
   existingTransactions: Transaction[]
   editingTransaction?: Transaction | null
   onCancelEdit?: () => void
+  userEmail?: string
 }
 
-export default function TransactionForm({ onTransactionAdded, onTransactionUpdated, existingTransactions, editingTransaction, onCancelEdit }: TransactionFormProps) {
+export default function TransactionForm({ onTransactionAdded, onTransactionUpdated, existingTransactions, editingTransaction, onCancelEdit, userEmail }: TransactionFormProps) {
   const [formData, setFormData] = useState({
     symbol: '',
     type: 'BUY' as 'BUY' | 'SELL',
@@ -42,11 +43,11 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
   // Load available tags
   useEffect(() => {
     const loadTags = async () => {
-      const tags = await UnifiedTagService.getTags()
+      const tags = await UnifiedTagService.getTags(userEmail)
       setAvailableTags(tags)
     }
     loadTags()
-  }, [])
+  }, [userEmail])
 
   // Filter tags based on input
   useEffect(() => {
@@ -171,13 +172,13 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
 
     if (isEditMode && editingTransaction && onTransactionUpdated) {
       // Update existing transaction
-      const updated = await TransactionService.updateTransaction(editingTransaction.id, transactionData)
+      const updated = await TransactionService.updateTransaction(editingTransaction.id, transactionData, userEmail)
       if (updated) {
         onTransactionUpdated(updated)
       }
     } else {
       // Create new transaction
-      const created = await TransactionService.createTransaction(transactionData)
+      const created = await TransactionService.createTransaction(transactionData, userEmail)
       if (created) {
         onTransactionAdded(created)
       }
@@ -216,9 +217,9 @@ export default function TransactionForm({ onTransactionAdded, onTransactionUpdat
   }
 
   const createAndAddTag = async () => {
-    if (tagInput.trim() && !(await UnifiedTagService.tagExists(tagInput.trim()))) {
-      const newTag = await UnifiedTagService.createTag(tagInput.trim())
-      const tags = await UnifiedTagService.getTags()
+    if (tagInput.trim() && !(await UnifiedTagService.tagExists(tagInput.trim(), undefined, userEmail))) {
+      const newTag = await UnifiedTagService.createTag(tagInput.trim(), undefined, undefined, userEmail)
+      const tags = await UnifiedTagService.getTags(userEmail)
       setAvailableTags(tags) // Refresh available tags
       if (newTag) {
         addTag(newTag.id)

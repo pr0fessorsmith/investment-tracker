@@ -26,7 +26,7 @@ export default function Home() {
     const loadTransactions = async () => {
       setIsLoading(true)
       try {
-        const loaded = await TransactionService.getTransactions()
+        const loaded = await TransactionService.getTransactions(session?.user?.email ?? undefined)
         setTransactions(loaded)
       } catch (error) {
         console.error('Error loading transactions:', error)
@@ -36,7 +36,7 @@ export default function Home() {
     }
 
     loadTransactions()
-  }, [])
+  }, [session?.user?.email])
 
   // Show migration modal after user logs in
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function Home() {
   const handleDeleteTransaction = async (transactionId: string) => {
     if (confirm('Are you sure you want to delete this transaction?')) {
       // Delete from service
-      await TransactionService.deleteTransaction(transactionId)
+      await TransactionService.deleteTransaction(transactionId, session?.user?.email ?? undefined)
       
       // Update local state
       setTransactions(prev => prev.filter(t => t.id !== transactionId))
@@ -73,7 +73,7 @@ export default function Home() {
   const handleMigrationComplete = async () => {
     setShowMigration(false)
     // Reload transactions after migration
-    const loaded = await TransactionService.getTransactions()
+    const loaded = await TransactionService.getTransactions(session?.user?.email ?? undefined)
     setTransactions(loaded)
   }
 
@@ -274,6 +274,7 @@ export default function Home() {
               onEditTransaction={handleEditTransaction}
               onDataRecovery={handleDataRecovery}
               onTestLocalStorage={handleTestLocalStorage}
+              userEmail={session?.user?.email ?? undefined}
             />
           )}
           {activeTab === 'transactions' && (
@@ -283,6 +284,7 @@ export default function Home() {
               existingTransactions={transactions}
               editingTransaction={editingTransaction}
               onCancelEdit={handleCancelEdit}
+              userEmail={session?.user?.email ?? undefined}
             />
           )}
           {activeTab === 'history' && (
@@ -361,6 +363,7 @@ export default function Home() {
           // Refresh any components that use tags
           // This could trigger a re-render of components that display tags
         }}
+        userEmail={session?.user?.email ?? undefined}
       />
     </div>
   )

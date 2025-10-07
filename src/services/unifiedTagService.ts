@@ -7,33 +7,19 @@ import { TagService as LocalTagService } from './tagService'
 
 /**
  * Unified Tag Service
- * Uses Supabase when authenticated, localStorage as fallback
+ * Uses Supabase when user email is provided (NextAuth), localStorage as fallback
  */
 export class UnifiedTagService {
   /**
-   * Check if user is authenticated
-   */
-  private static async isAuthenticated(): Promise<boolean> {
-    try {
-      const supabase = createClient()
-      if (!supabase) return false
-      
-      const { data: { user } } = await supabase.auth.getUser()
-      return !!user
-    } catch {
-      return false
-    }
-  }
-
-  /**
    * Get all tags
+   * @param userEmail - User email from NextAuth session (if authenticated)
    */
-  static async getTags(): Promise<Tag[]> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+  static async getTags(userEmail?: string): Promise<Tag[]> {
+    if (userEmail && SupabaseTagService.isAvailable()) {
+      console.log(`📊 Fetching tags from Supabase for ${userEmail}`)
       return await SupabaseTagService.getTags()
     } else {
+      console.log('📊 Fetching tags from localStorage')
       return LocalTagService.getTags()
     }
   }
@@ -44,12 +30,11 @@ export class UnifiedTagService {
   static async createTag(
     name: string,
     color?: string,
-    category?: 'broker' | 'strategy' | 'sector' | 'custom'
+    category?: 'broker' | 'strategy' | 'sector' | 'custom',
+    userEmail?: string
   ): Promise<Tag | null> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
-      return await SupabaseTagService.createTag(name, color, category)
+    if (userEmail && SupabaseTagService.isAvailable()) {
+      return await SupabaseTagService.createTag(name, color, category, userEmail)
     } else {
       return LocalTagService.createTag(name, color, category)
     }
@@ -60,11 +45,10 @@ export class UnifiedTagService {
    */
   static async updateTag(
     id: string,
-    updates: Partial<Omit<Tag, 'id' | 'createdAt'>>
+    updates: Partial<Omit<Tag, 'id' | 'createdAt'>>,
+    userEmail?: string
   ): Promise<Tag | null> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+    if (userEmail && SupabaseTagService.isAvailable()) {
       return await SupabaseTagService.updateTag(id, updates)
     } else {
       return LocalTagService.updateTag(id, updates)
@@ -74,10 +58,8 @@ export class UnifiedTagService {
   /**
    * Delete a tag
    */
-  static async deleteTag(id: string): Promise<boolean> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+  static async deleteTag(id: string, userEmail?: string): Promise<boolean> {
+    if (userEmail && SupabaseTagService.isAvailable()) {
       return await SupabaseTagService.deleteTag(id)
     } else {
       return LocalTagService.deleteTag(id)
@@ -87,10 +69,8 @@ export class UnifiedTagService {
   /**
    * Get tag by ID
    */
-  static async getTagById(id: string): Promise<Tag | null> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+  static async getTagById(id: string, userEmail?: string): Promise<Tag | null> {
+    if (userEmail && SupabaseTagService.isAvailable()) {
       return await SupabaseTagService.getTagById(id)
     } else {
       return LocalTagService.getTagById(id)
@@ -100,10 +80,8 @@ export class UnifiedTagService {
   /**
    * Get tags by IDs
    */
-  static async getTagsByIds(ids: string[]): Promise<Tag[]> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+  static async getTagsByIds(ids: string[], userEmail?: string): Promise<Tag[]> {
+    if (userEmail && SupabaseTagService.isAvailable()) {
       return await SupabaseTagService.getTagsByIds(ids)
     } else {
       return LocalTagService.getTagsByIds(ids)
@@ -113,10 +91,8 @@ export class UnifiedTagService {
   /**
    * Search tags by name
    */
-  static async searchTags(query: string): Promise<Tag[]> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+  static async searchTags(query: string, userEmail?: string): Promise<Tag[]> {
+    if (userEmail && SupabaseTagService.isAvailable()) {
       return await SupabaseTagService.searchTags(query)
     } else {
       return LocalTagService.searchTags(query)
@@ -126,10 +102,8 @@ export class UnifiedTagService {
   /**
    * Get tags by category
    */
-  static async getTagsByCategory(category: string): Promise<Tag[]> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+  static async getTagsByCategory(category: string, userEmail?: string): Promise<Tag[]> {
+    if (userEmail && SupabaseTagService.isAvailable()) {
       return await SupabaseTagService.getTagsByCategory(category)
     } else {
       return LocalTagService.getTagsByCategory(category)
@@ -139,10 +113,8 @@ export class UnifiedTagService {
   /**
    * Get all categories
    */
-  static async getCategories(): Promise<string[]> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+  static async getCategories(userEmail?: string): Promise<string[]> {
+    if (userEmail && SupabaseTagService.isAvailable()) {
       return await SupabaseTagService.getCategories()
     } else {
       return LocalTagService.getCategories()
@@ -152,10 +124,8 @@ export class UnifiedTagService {
   /**
    * Check if tag name exists
    */
-  static async tagExists(name: string, excludeId?: string): Promise<boolean> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+  static async tagExists(name: string, excludeId?: string, userEmail?: string): Promise<boolean> {
+    if (userEmail && SupabaseTagService.isAvailable()) {
       return await SupabaseTagService.tagExists(name, excludeId)
     } else {
       return LocalTagService.tagExists(name, excludeId)
@@ -167,11 +137,10 @@ export class UnifiedTagService {
    */
   static async getOrCreateTag(
     name: string,
-    category?: 'broker' | 'strategy' | 'sector' | 'custom'
+    category?: 'broker' | 'strategy' | 'sector' | 'custom',
+    userEmail?: string
   ): Promise<Tag | null> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+    if (userEmail && SupabaseTagService.isAvailable()) {
       return await SupabaseTagService.getOrCreateTag(name, category)
     } else {
       return LocalTagService.getOrCreateTag(name, category)
@@ -189,11 +158,10 @@ export class UnifiedTagService {
    * Subscribe to real-time tag changes (only works with Supabase)
    */
   static async subscribeToTags(
-    callback: (tags: Tag[]) => void
+    callback: (tags: Tag[]) => void,
+    userEmail?: string
   ): Promise<(() => void) | null> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+    if (userEmail && SupabaseTagService.isAvailable()) {
       return SupabaseTagService.subscribeToTags(callback)
     }
     

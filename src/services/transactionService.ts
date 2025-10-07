@@ -4,35 +4,20 @@ import { Transaction, Position } from '@/types/transactions'
 
 /**
  * Unified Transaction Service
- * Uses Supabase when authenticated, localStorage as fallback
+ * Uses Supabase when user email is provided (NextAuth), localStorage as fallback
  */
 export class TransactionService {
   private static STORAGE_KEY = 'investment-transactions'
 
   /**
-   * Check if user is authenticated
-   */
-  private static async isAuthenticated(): Promise<boolean> {
-    try {
-      const supabase = createClient()
-      if (!supabase) return false
-      
-      const { data: { user } } = await supabase.auth.getUser()
-      return !!user
-    } catch {
-      return false
-    }
-  }
-
-  /**
    * Get all transactions
    */
-  static async getTransactions(): Promise<Transaction[]> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+  static async getTransactions(userEmail?: string): Promise<Transaction[]> {
+    if (userEmail && SupabaseTransactionService.isAvailable()) {
+      console.log(`📊 Fetching transactions from Supabase for ${userEmail}`)
       return await SupabaseTransactionService.getTransactions()
     } else {
+      console.log('📊 Fetching transactions from localStorage')
       return this.getLocalTransactions()
     }
   }
@@ -64,11 +49,9 @@ export class TransactionService {
   /**
    * Create a new transaction
    */
-  static async createTransaction(transaction: Omit<Transaction, 'id'>): Promise<Transaction | null> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
-      return await SupabaseTransactionService.createTransaction(transaction)
+  static async createTransaction(transaction: Omit<Transaction, 'id'>, userEmail?: string): Promise<Transaction | null> {
+    if (userEmail && SupabaseTransactionService.isAvailable()) {
+      return await SupabaseTransactionService.createTransaction(transaction, userEmail)
     } else {
       // localStorage fallback
       const newTransaction: Transaction = {
@@ -86,11 +69,10 @@ export class TransactionService {
    */
   static async updateTransaction(
     id: string,
-    updates: Partial<Omit<Transaction, 'id'>>
+    updates: Partial<Omit<Transaction, 'id'>>,
+    userEmail?: string
   ): Promise<Transaction | null> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+    if (userEmail && SupabaseTransactionService.isAvailable()) {
       return await SupabaseTransactionService.updateTransaction(id, updates)
     } else {
       // localStorage fallback
@@ -109,10 +91,8 @@ export class TransactionService {
   /**
    * Delete a transaction
    */
-  static async deleteTransaction(id: string): Promise<boolean> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+  static async deleteTransaction(id: string, userEmail?: string): Promise<boolean> {
+    if (userEmail && SupabaseTransactionService.isAvailable()) {
       return await SupabaseTransactionService.deleteTransaction(id)
     } else {
       // localStorage fallback
@@ -126,10 +106,8 @@ export class TransactionService {
   /**
    * Get portfolio positions
    */
-  static async getPortfolioPositions(): Promise<Position[]> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+  static async getPortfolioPositions(userEmail?: string): Promise<Position[]> {
+    if (userEmail && SupabaseTransactionService.isAvailable()) {
       return await SupabaseTransactionService.getPortfolioPositions()
     } else {
       // localStorage fallback - calculate from transactions
@@ -142,11 +120,10 @@ export class TransactionService {
    * Subscribe to transaction changes (only works with Supabase)
    */
   static async subscribeToTransactions(
-    callback: (transactions: Transaction[]) => void
+    callback: (transactions: Transaction[]) => void,
+    userEmail?: string
   ): Promise<(() => void) | null> {
-    const isAuth = await this.isAuthenticated()
-    
-    if (isAuth) {
+    if (userEmail && SupabaseTransactionService.isAvailable()) {
       return SupabaseTransactionService.subscribeToTransactions(callback)
     }
     

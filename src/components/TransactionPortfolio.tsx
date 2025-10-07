@@ -13,9 +13,10 @@ interface TransactionPortfolioProps {
   onEditTransaction: (transaction: Transaction) => void
   onDataRecovery?: () => void
   onTestLocalStorage?: () => void
+  userEmail?: string
 }
 
-export default function TransactionPortfolio({ transactions, onDeleteTransaction, onEditTransaction, onDataRecovery, onTestLocalStorage }: TransactionPortfolioProps) {
+export default function TransactionPortfolio({ transactions, onDeleteTransaction, onEditTransaction, onDataRecovery, onTestLocalStorage, userEmail }: TransactionPortfolioProps) {
   const [portfolio, setPortfolio] = useState<PortfolioType | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [expandedPosition, setExpandedPosition] = useState<string | null>(null)
@@ -29,11 +30,11 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
   // Load available tags
   useEffect(() => {
     const loadTags = async () => {
-      const tags = await UnifiedTagService.getTags()
+      const tags = await UnifiedTagService.getTags(userEmail)
       setAvailableTags(tags)
     }
     loadTags()
-  }, [])
+  }, [userEmail])
 
   // Filter positions based on selected tags
   useEffect(() => {
