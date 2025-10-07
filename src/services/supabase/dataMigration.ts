@@ -102,6 +102,39 @@ export class DataMigration {
         }
       }
 
+      console.log(`👤 Migrating data for user: ${userEmail}`)
+
+      // First, ensure user exists in Supabase users table
+      const { data: existingUser, error: userCheckError } = await SupabaseTagService['supabase']
+        ?.from('users')
+        .select('id')
+        .eq('id', userEmail)
+        .single()
+
+      if (!existingUser) {
+        console.log('👤 Creating user record in Supabase...')
+        const { error: userCreateError } = await SupabaseTagService['supabase']
+          ?.from('users')
+          .insert({
+            id: userEmail,
+            email: userEmail,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+
+        if (userCreateError) {
+          console.error('❌ Failed to create user record:', userCreateError)
+          return {
+            success: false,
+            message: `Failed to create user record: ${userCreateError.message}`,
+            stats,
+          }
+        }
+        console.log('✅ User record created')
+      } else {
+        console.log('✅ User record already exists')
+      }
+
       // Check if Supabase services are available
       if (!SupabaseTagService.isAvailable() || !SupabaseTransactionService.isAvailable()) {
         console.error('❌ Supabase services not available - check environment variables')
