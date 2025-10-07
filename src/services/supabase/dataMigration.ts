@@ -133,26 +133,21 @@ export class DataMigration {
       for (const tag of localTags) {
         console.log(`🏷️ Processing tag: ${tag.name} (${tag.id})`)
         
-        // Skip predefined tags as they're created automatically
-        if (tag.id.startsWith('predefined-')) {
-          console.log(`  ↳ Predefined tag, looking for equivalent in Supabase...`)
-          // Try to find the equivalent tag in Supabase
-          const supabaseTags = await SupabaseTagService.getTags()
-          const existing = supabaseTags.find(
-            (t) => t.name.toLowerCase() === tag.name.toLowerCase()
-          )
-          if (existing) {
-            console.log(`  ✅ Found equivalent: ${existing.id}`)
-            tagIdMap.set(tag.id, existing.id)
-            stats.tagsMigrated++
-          } else {
-            console.log(`  ⚠️ No equivalent found`)
-          }
+        // Check if tag already exists in Supabase (predefined or custom)
+        const supabaseTags = await SupabaseTagService.getTags()
+        const existing = supabaseTags.find(
+          (t) => t.name.toLowerCase() === tag.name.toLowerCase()
+        )
+        
+        if (existing) {
+          console.log(`  ✅ Found existing tag in Supabase: ${existing.id}`)
+          tagIdMap.set(tag.id, existing.id)
+          stats.tagsMigrated++
           continue
         }
 
-        // Create custom tags
-        console.log(`  ↳ Creating custom tag...`)
+        // Create tag in Supabase (works for both predefined and custom)
+        console.log(`  ↳ Creating tag in Supabase...`)
         const newTag = await SupabaseTagService.createTag(
           tag.name,
           tag.color,
