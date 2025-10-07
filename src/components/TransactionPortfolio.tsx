@@ -5,19 +5,16 @@ import { TrendingUp, TrendingDown, DollarSign, Activity, Eye, Trash2, Plus, Minu
 import { financeService } from '../services/financeService'
 import { UnifiedTagService } from '../services/unifiedTagService'
 import { Transaction, Position, Portfolio as PortfolioType, TransactionCalculator, Tag } from '../types/transactions'
-import DataMigrationButton from './DataMigrationButton'
 
 interface TransactionPortfolioProps {
   transactions: Transaction[]
   onDeleteTransaction: (transactionId: string) => void
   onEditTransaction: (transaction: Transaction) => void
-  onDataRecovery?: () => void
-  onTestLocalStorage?: () => void
   onClearAllTransactions?: () => void
   userEmail?: string
 }
 
-export default function TransactionPortfolio({ transactions, onDeleteTransaction, onEditTransaction, onDataRecovery, onTestLocalStorage, onClearAllTransactions, userEmail }: TransactionPortfolioProps) {
+export default function TransactionPortfolio({ transactions, onDeleteTransaction, onEditTransaction, onClearAllTransactions, userEmail }: TransactionPortfolioProps) {
   const [portfolio, setPortfolio] = useState<PortfolioType | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [expandedPosition, setExpandedPosition] = useState<string | null>(null)
@@ -154,37 +151,10 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
         <Activity className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Transactions Found</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Transactions Yet</h3>
         <p className="text-gray-600 dark:text-gray-400 mb-6">
-          Your transaction data appears to be missing. This may have happened during recent updates.
+          Start tracking your investments by adding your first transaction!
         </p>
-        <div className="space-y-3">
-          {onTestLocalStorage && (
-            <button
-              onClick={onTestLocalStorage}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors mr-3"
-            >
-              Test LocalStorage
-            </button>
-          )}
-          {onDataRecovery && (
-            <button
-              onClick={onDataRecovery}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Add Sample Data
-            </button>
-          )}
-        </div>
-        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Data Recovery Options:</h4>
-          <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-            <p>• Check if you have the app open in another tab</p>
-            <p>• Look in browser history for previous data</p>
-            <p>• Use &quot;Add Sample Data&quot; to get started again</p>
-            <p>• Your Google authentication and API settings are preserved</p>
-          </div>
-        </div>
       </div>
     )
   }
@@ -212,9 +182,9 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
   return (
     <div className="space-y-6">
       {/* Portfolio Summary */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-md p-6 text-white">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
             <TrendingUp className="h-6 w-6" />
             Portfolio Summary
           </h2>
@@ -222,40 +192,38 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <p className="text-blue-100">Total Invested</p>
-            <p className="text-2xl font-bold">{formatCurrency(portfolio.totalInvested)}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Invested</p>
+            <p className="text-xl font-semibold text-gray-900 dark:text-white">{formatCurrency(portfolio.totalInvested)}</p>
           </div>
           <div>
-            <p className="text-blue-100">Current Value</p>
-            <p className="text-2xl font-bold">{formatCurrency(portfolio.totalCurrentValue)}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Current Value</p>
+            <p className="text-xl font-semibold text-gray-900 dark:text-white">{formatCurrency(portfolio.totalCurrentValue)}</p>
           </div>
           <div>
-            <p className="text-blue-100">Realized P&L</p>
-            <p className={`text-2xl font-bold ${
-              portfolio.totalRealizedGainLoss >= 0 ? 'text-green-300' : 'text-red-300'
-            }`}>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Realized P&L</p>
+            <p className={`text-xl font-semibold ${getGainLossColor(portfolio.totalRealizedGainLoss)}`}>
               {formatCurrency(portfolio.totalRealizedGainLoss)}
             </p>
           </div>
           <div>
-            <p className="text-blue-100">Unrealized P&L</p>
-            <p className={`text-2xl font-bold ${
-              portfolio.totalUnrealizedGainLoss >= 0 ? 'text-green-300' : 'text-red-300'
-            }`}>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Unrealized P&L</p>
+            <p className={`text-xl font-semibold ${getGainLossColor(portfolio.totalUnrealizedGainLoss)}`}>
               {formatCurrency(portfolio.totalUnrealizedGainLoss)}
             </p>
           </div>
         </div>
         
-        <div className="mt-4 pt-4 border-t border-white/20">
+        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center">
-            <span className="text-lg">Total P&L:</span>
-            <span className={`text-2xl font-bold ${
-              portfolio.totalGainLoss >= 0 ? 'text-green-300' : 'text-red-300'
-            }`}>
-              {formatCurrency(portfolio.totalGainLoss)} 
-              ({formatPercentage(portfolio.totalGainLoss, portfolio.totalInvested)})
-            </span>
+            <span className="text-base font-medium text-gray-700 dark:text-gray-300">Total P&L:</span>
+            <div className="text-right">
+              <span className={`text-2xl font-bold ${getGainLossColor(portfolio.totalGainLoss)}`}>
+                {formatCurrency(portfolio.totalGainLoss)}
+              </span>
+              <span className={`ml-2 text-lg font-semibold ${getGainLossColor(portfolio.totalGainLoss)}`}>
+                ({formatPercentage(portfolio.totalGainLoss, portfolio.totalInvested)})
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -265,10 +233,8 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Current Positions</h3>
           
-          {/* Tag Filter Controls and Migration Button */}
+          {/* Tag Filter Controls */}
           <div className="flex items-center gap-2 flex-wrap">
-            <DataMigrationButton />
-            
             {onClearAllTransactions && transactions.length > 0 && (
               <button
                 onClick={() => {
@@ -276,10 +242,10 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
                     onClearAllTransactions()
                   }
                 }}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors shadow-sm"
               >
                 <Trash2 className="h-4 w-4" />
-                <span className="text-sm">Clear All</span>
+                <span className="text-sm">Clear All Transactions</span>
               </button>
             )}
             

@@ -8,7 +8,6 @@ import TransactionForm from '@/components/TransactionForm'
 import TransactionPortfolio from '@/components/TransactionPortfolio'
 import Charts from '@/components/Charts'
 import TagManager from '@/components/TagManager'
-import MigrationModal from '@/components/MigrationModal'
 import { Transaction } from '@/types/transactions'
 import { TransactionService } from '@/services/transactionService'
 
@@ -19,7 +18,6 @@ export default function Home() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   const [showTagManager, setShowTagManager] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [showMigration, setShowMigration] = useState(false)
 
   // Load transactions (from Supabase or localStorage)
   useEffect(() => {
@@ -37,13 +35,6 @@ export default function Home() {
 
     loadTransactions()
   }, [session?.user?.email])
-
-  // Show migration modal after user logs in
-  useEffect(() => {
-    if (session && !isLoading) {
-      setShowMigration(true)
-    }
-  }, [session, isLoading])
 
   const handleTransactionAdded = async (transaction: Transaction) => {
     console.log('Adding transaction:', transaction)
@@ -79,13 +70,6 @@ export default function Home() {
     
     // Clear local state
     setTransactions([])
-  }
-
-  const handleMigrationComplete = async () => {
-    setShowMigration(false)
-    // Reload transactions after migration
-    const loaded = await TransactionService.getTransactions(session?.user?.email ?? undefined)
-    setTransactions(loaded)
   }
 
   const handleEditTransaction = (transaction: Transaction) => {
@@ -283,8 +267,6 @@ export default function Home() {
               transactions={transactions}
               onDeleteTransaction={handleDeleteTransaction}
               onEditTransaction={handleEditTransaction}
-              onDataRecovery={handleDataRecovery}
-              onTestLocalStorage={handleTestLocalStorage}
               onClearAllTransactions={handleClearAllTransactions}
               userEmail={session?.user?.email ?? undefined}
             />
@@ -360,12 +342,6 @@ export default function Home() {
           {activeTab === 'charts' && <Charts transactions={transactions} />}
         </div>
       </main>
-
-      {/* Migration Modal */}
-      <MigrationModal 
-        onComplete={handleMigrationComplete} 
-        userEmail={session?.user?.email || undefined}
-      />
 
       {/* Tag Manager Modal */}
       <TagManager 
