@@ -88,22 +88,19 @@
             const isVercel = window.location.hostname.includes('vercel.app');
             checks.push(`<li>Running on: <code>${window.location.hostname}</code> ${isVercel ? '<span class="check">✅ Vercel</span>' : '<span class="warning">⚠️ Not Vercel</span>'}</li>`);
             
-            // Check environment variables (client-side)
-            const hasSupabaseUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SUPABASE_URL;
-            const hasSupabaseKey = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            // Try to fetch environment info from Next.js API
+            let hasSupabaseUrl = false;
+            let hasSupabaseKey = false;
+            let supabaseUrl = '';
+            let keyInfo = '';
             
-            checks.push(`<li>NEXT_PUBLIC_SUPABASE_URL: ${hasSupabaseUrl ? '<span class="check">✅ Set</span>' : '<span class="cross">❌ Missing</span>'}</li>`);
-            checks.push(`<li>NEXT_PUBLIC_SUPABASE_ANON_KEY: ${hasSupabaseKey ? '<span class="check">✅ Set</span>' : '<span class="cross">❌ Missing</span>'}</li>`);
-            
-            if (hasSupabaseUrl) {
-                checks.push(`<li>Supabase URL: <code>${process.env.NEXT_PUBLIC_SUPABASE_URL}</code></li>`);
-            }
-            
-            if (hasSupabaseKey) {
-                const keyLength = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length;
-                const dots = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.match(/\./g) || []).length;
-                checks.push(`<li>Key length: ${keyLength} (expected ~249)</li>`);
-                checks.push(`<li>JWT dots: ${dots} ${dots === 2 ? '<span class="check">✅ Valid</span>' : '<span class="cross">❌ Invalid</span>'}</li>`);
+            try {
+                // This is a static HTML file, so we can't access Next.js env vars directly
+                // We need to check if Supabase client can be created from the Next.js app
+                checks.push(`<li>Note: This is a static page - env vars loaded from Next.js app</li>`);
+                checks.push(`<li>Check browser console in main app for detailed migration logs</li>`);
+            } catch (e) {
+                checks.push(`<li>Error checking environment: ${e.message}</li>`);
             }
             
             // Check localStorage
@@ -141,52 +138,19 @@
         }
 
         async function checkSupabase() {
-            try {
-                const url = process.env?.NEXT_PUBLIC_SUPABASE_URL;
-                const key = process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-                
-                if (!url || !key) {
-                    showStatus(`
-                        <h2>❌ Supabase Not Configured</h2>
-                        <p>Environment variables are missing. Cannot test connection.</p>
-                    `, 'error');
-                    return;
-                }
-                
-                showStatus(`<h2>🔄 Testing Supabase Connection...</h2>`, 'info');
-                
-                // Try to fetch from Supabase REST API
-                const response = await fetch(`${url}/rest/v1/`, {
-                    headers: {
-                        'apikey': key,
-                        'Authorization': `Bearer ${key}`
-                    }
-                });
-                
-                const result = `
-                    <h2>Supabase Connection Test:</h2>
-                    <ul>
-                        <li>URL: <code>${url}</code></li>
-                        <li>Status: ${response.ok ? '<span class="check">✅ Connected</span>' : '<span class="cross">❌ Failed</span>'}</li>
-                        <li>Response code: ${response.status}</li>
-                    </ul>
-                    ${!response.ok ? `
-                        <div style="margin-top: 20px; padding: 15px; background: #7f1d1d; border-radius: 6px;">
-                            <strong>Connection Failed!</strong>
-                            <p>Status ${response.status}: ${response.statusText}</p>
-                            ${response.status === 401 ? '<p>❌ <strong>401 Unauthorized:</strong> Your anon key is invalid or expired!</p>' : ''}
-                            ${response.status === 403 ? '<p>❌ <strong>403 Forbidden:</strong> Check your RLS policies!</p>' : ''}
-                        </div>
-                    ` : ''}
-                `;
-                
-                showStatus(result, response.ok ? 'success' : 'error');
-            } catch (error) {
-                showStatus(`
-                    <h2>❌ Connection Error</h2>
-                    <pre>${error.message}</pre>
-                `, 'error');
-            }
+            showStatus(`
+                <h2>☁️ Supabase Connection Check</h2>
+                <p>This static page cannot directly test Supabase connection.</p>
+                <p><strong>To test Supabase:</strong></p>
+                <ol>
+                    <li>Go to your main app URL (not /debug/)</li>
+                    <li>Sign in with Google</li>
+                    <li>Open browser console (F12)</li>
+                    <li>Look for Supabase connection messages</li>
+                    <li>Try the migration - you'll see detailed logs</li>
+                </ol>
+                <p>Or use the <a href="/debug/reset-migration.html" style="color: #60a5fa;">Migration Reset Tool</a></p>
+            `, 'warning');
         }
 
         async function checkAuth() {
