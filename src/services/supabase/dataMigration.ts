@@ -38,7 +38,7 @@ export class DataMigration {
   static hasLocalStorageData(): boolean {
     try {
       const tags = localStorage.getItem('investment-tags')
-      const transactions = localStorage.getItem('transactions')
+      const transactions = localStorage.getItem('investment-transactions')
       return !!(tags || transactions)
     } catch {
       return false
@@ -50,7 +50,7 @@ export class DataMigration {
    */
   private static getLocalStorageTransactions(): Transaction[] {
     try {
-      const stored = localStorage.getItem('transactions')
+      const stored = localStorage.getItem('investment-transactions')
       return stored ? JSON.parse(stored) : []
     } catch (error) {
       console.error('Error reading localStorage transactions:', error)
@@ -227,7 +227,7 @@ export class DataMigration {
    */
   static clearLocalStorageData(): void {
     try {
-      localStorage.removeItem('transactions')
+      localStorage.removeItem('investment-transactions')
       localStorage.removeItem('investment-tags')
       console.log('✅ localStorage data cleared')
     } catch (error) {

@@ -107,7 +107,7 @@
             }
             
             // Check localStorage
-            const hasLocalTransactions = !!localStorage.getItem('transactions');
+            const hasLocalTransactions = !!localStorage.getItem('investment-transactions');
             const hasLocalTags = !!localStorage.getItem('investment-tags');
             const migrationCompleted = localStorage.getItem('supabase_migration_completed');
             
@@ -209,7 +209,7 @@
         }
 
         async function checkMigration() {
-            const transactions = localStorage.getItem('transactions');
+            const transactions = localStorage.getItem('investment-transactions');
             const tags = localStorage.getItem('investment-tags');
             const migrationFlag = localStorage.getItem('supabase_migration_completed');
             
