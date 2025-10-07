@@ -105,16 +105,25 @@ export class DataMigration {
       console.log(`👤 Migrating data for user: ${userEmail}`)
 
       // First, ensure user exists in Supabase users table
-      const { data: existingUser, error: userCheckError } = await SupabaseTagService['supabase']
-        ?.from('users')
+      const supabaseClient = (SupabaseTagService as any).supabase
+      if (!supabaseClient) {
+        return {
+          success: false,
+          message: 'Supabase client not available',
+          stats,
+        }
+      }
+
+      const { data: existingUser, error: userCheckError } = await supabaseClient
+        .from('users')
         .select('id')
         .eq('id', userEmail)
-        .single()
+        .maybeSingle()
 
-      if (!existingUser) {
+      if (!existingUser && !userCheckError) {
         console.log('👤 Creating user record in Supabase...')
-        const { error: userCreateError } = await SupabaseTagService['supabase']
-          ?.from('users')
+        const { error: userCreateError } = await supabaseClient
+          .from('users')
           .insert({
             id: userEmail,
             email: userEmail,
@@ -131,6 +140,8 @@ export class DataMigration {
           }
         }
         console.log('✅ User record created')
+      } else if (userCheckError) {
+        console.error('❌ Error checking for user:', userCheckError)
       } else {
         console.log('✅ User record already exists')
       }
