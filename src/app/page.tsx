@@ -70,6 +70,17 @@ export default function Home() {
     }
   }
 
+  const handleClearAllTransactions = async () => {
+    // Delete all transactions from service
+    const userEmail = session?.user?.email ?? undefined
+    for (const transaction of transactions) {
+      await TransactionService.deleteTransaction(transaction.id, userEmail)
+    }
+    
+    // Clear local state
+    setTransactions([])
+  }
+
   const handleMigrationComplete = async () => {
     setShowMigration(false)
     // Reload transactions after migration
@@ -274,6 +285,7 @@ export default function Home() {
               onEditTransaction={handleEditTransaction}
               onDataRecovery={handleDataRecovery}
               onTestLocalStorage={handleTestLocalStorage}
+              onClearAllTransactions={handleClearAllTransactions}
               userEmail={session?.user?.email ?? undefined}
             />
           )}

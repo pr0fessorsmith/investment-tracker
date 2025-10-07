@@ -13,10 +13,11 @@ interface TransactionPortfolioProps {
   onEditTransaction: (transaction: Transaction) => void
   onDataRecovery?: () => void
   onTestLocalStorage?: () => void
+  onClearAllTransactions?: () => void
   userEmail?: string
 }
 
-export default function TransactionPortfolio({ transactions, onDeleteTransaction, onEditTransaction, onDataRecovery, onTestLocalStorage, userEmail }: TransactionPortfolioProps) {
+export default function TransactionPortfolio({ transactions, onDeleteTransaction, onEditTransaction, onDataRecovery, onTestLocalStorage, onClearAllTransactions, userEmail }: TransactionPortfolioProps) {
   const [portfolio, setPortfolio] = useState<PortfolioType | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [expandedPosition, setExpandedPosition] = useState<string | null>(null)
@@ -267,6 +268,20 @@ export default function TransactionPortfolio({ transactions, onDeleteTransaction
           {/* Tag Filter Controls and Migration Button */}
           <div className="flex items-center gap-2 flex-wrap">
             <DataMigrationButton />
+            
+            {onClearAllTransactions && transactions.length > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm(`Are you sure you want to delete all ${transactions.length} transaction(s)? This action cannot be undone!`)) {
+                    onClearAllTransactions()
+                  }
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="text-sm">Clear All</span>
+              </button>
+            )}
             
             <button
               onClick={() => setShowTagFilter(!showTagFilter)}
