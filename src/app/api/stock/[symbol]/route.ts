@@ -1,23 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { symbol: string } }
 ) {
-  const { symbol } = params
-  const API_KEY = process.env.ALPHA_VANTAGE_API_KEY
-
-  if (!API_KEY) {
+  // Security: Verify user is authenticated
+  const session = await getServerSession()
+  if (!session || !session.user) {
     return NextResponse.json(
-      { error: 'API key not configured' },
-      { status: 500 }
+      { error: 'Unauthorized - Please sign in' },
+      { status: 401 }
     )
   }
 
-  if (!symbol) {
+  const { symbol } = params
+  
+  // Security: Validate symbol format (1-5 uppercase letters)
+  if (!symbol || !/^[A-Z]{1,5}$/.test(symbol.toUpperCase())) {
     return NextResponse.json(
-      { error: 'Symbol parameter is required' },
+      { error: 'Invalid symbol format. Must be 1-5 uppercase letters.' },
       { status: 400 }
+    )
+  }
+
+  const API_KEY = process.env.ALPHA_VANTAGE_API_KEY
+
+  if (!API_KEY) {
+    console.error('Alpha Vantage API key not configured')
+    return NextResponse.json(
+      { error: 'Service temporarily unavailable' },
+      { status: 503 }
     )
   }
 
