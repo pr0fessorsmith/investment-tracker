@@ -45,6 +45,7 @@ Thumbs.db
 # Documentation (keep only README.md)
 *.md
 !README.md
+!SECURITY_UPDATES.md
 !.github/**/*.md
 
 # Debug tools (moved to public/debug)

@@ -2,6 +2,8 @@
 
 A modern, secure investment tracking application built with Next.js, featuring Google Authentication, real-time portfolio analytics, and beautiful charts.
 
+> **🔒 Security Update**: December 2024 - All dependencies updated to address CVE-2025-55182 and other vulnerabilities. See [SECURITY_UPDATES.md](SECURITY_UPDATES.md) for details.
+
 ## 🚀 Features
 
 - **🔐 Google OAuth Authentication** - Secure login with your Google account
@@ -14,7 +16,7 @@ A modern, secure investment tracking application built with Next.js, featuring G
 
 ## 🛠️ Technologies Used
 
-- **Framework**: Next.js 14 with App Router
+- **Framework**: Next.js 15 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Authentication**: NextAuth.js with Google Provider
@@ -126,6 +128,10 @@ src/
 - **Session Management**: Secure session handling with NextAuth.js
 - **Environment Variables**: Sensitive data stored securely
 - **TypeScript**: Type safety throughout the application
+- **Regular Security Updates**: All dependencies kept up-to-date to address vulnerabilities
+- **Zero Known Vulnerabilities**: All npm packages audited and secured (December 2024)
+
+For detailed information about recent security updates, see [SECURITY_UPDATES.md](SECURITY_UPDATES.md).
 
 ## 🎯 Future Enhancements
 
